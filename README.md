@@ -130,7 +130,7 @@ All of my hard disks are formatted in `ext4` (with no reserved space) and are mo
 
 At startup, mergerFS creates a FUSE mount and combines all of these drives into a single mount point, `/merged`. I use a systemd mount file for this purpose.
 
-This way, I am able to store and access all my files in a single. 
+This way, I am able to store and access all my files from a single mount point. 
 
 ## Media management ⏯
 
@@ -142,7 +142,7 @@ Tautulli tracks and stores details of playback and generates statistics and grap
 I use a forked version of the [`Plex-Trakt-Scrobbler`](https://github.com/rg9400/Plex-Trakt-Scrobbler) plugin that allows me to store and sync watched details and media information to Trakt.tv, which is a fantastic service I use to track movies and TV shows that I'm watching.
 On my phone, I use Varys, Watcht, Tautulli and Plex to keep track of my media and what I'm watching.
 
-Because of my media files cloud being stored in the cloud, there are certain options I have made to prevent unnecessary data use
+Because of my media files cloud being stored in the cloud, there are certain options I have made to prevent unnecessary data use:
 
 ![plex_settings](.github/assets/plex_settings.jpg "Plex Library Settings")
 
