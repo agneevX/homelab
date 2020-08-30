@@ -6,24 +6,24 @@ Most of the code/files are in their folders in this repository.
 
 - [My Server Setup](#my-server-setup)
   * [Hardware](#hardware)
-    + [Primary server](#primary-server---pi4--)
-    + [Secondary server](#secondary-server---always-on--)
+    + [Primary Server](#primary-server---pi4--)
+    + [Secondary Server](#secondary-server---always-on--)
   * [Software](#software)
-    + [Smart home](#smart-home)
-    + [System monitoring](#system-monitoring)
+    + [Smart Home](#smart-home)
+    + [System Monitoring](#system-monitoring)
     + [Others](#others)
-  * [File management](#file-management)
-    + [rclone](#rclone)
-    + [mergerFS](#mergerfs)
-  * [Media management](#media-management)
-  * [Backups and updates](#backups-and-updates)
-  * [Notes](#notes)
+  * [File management 🗃](#file-management---)
+    + [rclone ☁️](#rclone---)
+    + [mergerFS 💿](#mergerfs---)
+  * [Media management ⏯](#media-management--)
+  * [Backups and updates ↕️](#backups-and-updates---)
+  * [Notes 💬](#notes---)
 
 
 ## Hardware
 I run two servers at home, currently. The primary is a Raspberry Pi 4 and the secondary is a Raspberry Pi 3B+.
 
-![pi4](.github/assets/pi4.png "Raspberry Pi 4")
+<img src=".github/assets/pi4.png" width="300">
 
 ### Primary Server (`pi4`) 
 * Raspberry Pi 4 (4GB model)
@@ -46,7 +46,7 @@ I run two servers at home, currently. The primary is a Raspberry Pi 4 and the se
 The heat sink is required because the Pi is overclocked and runs very hot. With it, temperatures are lowered and there is no CPU throttling unless the server is under very heavy loads.
 I opted to not use a fan because they are not reliable and very noisy.
 
-![pi3b+](.github/assets/pi3.jpg)
+<img src=".github/assets/pi3.jpg" width="300">
 
 ### Secondary Server (`always-on`) 
 * Raspberry Pi 3B+
@@ -87,7 +87,7 @@ An inexhaustible list:
 * Homebridge 📱
 * Node-RED 🧩
 
-![bashtop](.github/assets/bashtop.jpg)
+![bashtop](.github/assets/bashtop.jpg "Bashtop running inside Cockpit, powered by NGINX reverse proxy, using AdGuard Home")
 
 ### System Monitoring
 * Cockpit ✈️
