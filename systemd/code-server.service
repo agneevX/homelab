@@ -1,0 +1,16 @@
+[Unit]
+Description=Code Server daemon
+After=network.target
+
+[Service]
+User=agneev
+Group=agneev
+WorkingDirectory=/home/agneev/code-server
+#Environment="PATH=/home/agneev/code-server"
+ExecStart=/home/agneev/.nvm/versions/node/v12.18.2/bin/code-server \
+        --port 8124 --auth none
+Restart=on-failure
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

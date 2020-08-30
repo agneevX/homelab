@@ -1,0 +1,20 @@
+[Unit]
+Description=Bazarr Daemon
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/bazarr/
+User=agneev
+Group=agneev
+UMask=0002
+Restart=on-failure
+RestartSec=5
+Type=simple
+ExecStart=/usr/bin/python3 /opt/bazarr/bazarr.py
+KillSignal=SIGINT
+TimeoutStopSec=20
+SyslogIdentifier=bazarr
+
+[Install]
+WantedBy=multi-user.target

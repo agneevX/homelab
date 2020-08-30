@@ -1,0 +1,21 @@
+[Unit]
+Description=qbittorrent-bot
+Wants=qbt.service
+After=qbt.service
+
+[Service]
+Type=idle
+WorkingDirectory=/opt/qbittorrent-bot
+ExecStart=/usr/bin/python3 /opt/qbittorrent-bot/main.py
+KillMode=process
+Restart=on-failure
+RestartSec=10
+User=agneev
+Group=agneev
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=qbtbot
+
+[Install]
+WantedBy=multi-user.target

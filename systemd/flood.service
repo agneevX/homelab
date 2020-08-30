@@ -1,0 +1,14 @@
+[Unit]
+Description=Flood daemon
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/flood
+ExecStart=/usr/bin/npm start /opt/flood
+Restart=on-failure
+User=agneev
+Group=agneev
+
+[Install]
+WantedBy=multi-user.target

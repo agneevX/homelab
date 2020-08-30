@@ -1,0 +1,12 @@
+home-assistant_v2.db
+.bash_history/
+.lesshst
+.ssh/
+.cache/
+tmp/
+*.core
+OZW_Log.txt
+home-assistant.log
+.google.token
+.selected_editor
+.git/

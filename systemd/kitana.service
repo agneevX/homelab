@@ -1,0 +1,15 @@
+[Unit]
+Description=Kitana Daemon
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/Kitana
+Environment=PYTHONPATH=/opt/Kitana
+ExecStart=/usr/bin/python3 /opt/Kitana/kitana.py
+Restart=on-failure
+User=agneev
+Group=agneev
+
+[Install]
+WantedBy=multi-user.target

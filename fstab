@@ -1,0 +1,4 @@
+UUID=xxxxx /mnt/pool/4TB ext4 nofail,defaults 0 2
+UUID=xxxxx /mnt/pool/1TB ext4 nofail,defaults 0 2
+UUID=xxxxx /mnt/pool/1TB_2 ext4 nofail,defaults 0 2
+UUID=xxxxx /mnt/pool/1TB_3 ext4 nofail,defaults 0 2

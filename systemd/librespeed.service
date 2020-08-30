@@ -1,0 +1,15 @@
+[Unit]
+Description=Librespeed daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/speedtest/src/SpeedTest.js
+Restart=on-failure
+RestartSec=10
+User=agneev
+Group=agneev
+
+[Install]
+WantedBy=multi-user.target

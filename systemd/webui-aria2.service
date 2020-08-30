@@ -1,0 +1,15 @@
+[Unit]
+Description=webUI aria2 Daemon
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/webui-aria2
+ExecStart=/usr/bin/node /opt/webui-aria2/node-server.js
+Restart=on-failure
+RestartSec=10
+User=agneev
+Group=agneev
+
+[Install]
+WantedBy=multi-user.target

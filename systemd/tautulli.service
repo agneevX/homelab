@@ -1,0 +1,21 @@
+[Unit]
+Description=Tautulli Daemon
+Wants=network-online.target nss-lookup.target
+After=network-online.target nss-lookup.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/Tautulli/Tautulli.py
+    --config /opt/Tautulli/config.ini \
+    --datadir /opt/Tautulli \
+    --quiet --daemon --nolaunch
+GuessMainPID=no
+Type=forking
+User=agneev
+Group=agneev
+Restart=on-abnormal
+RestartSec=5
+StartLimitInterval=90
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target

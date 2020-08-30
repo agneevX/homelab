@@ -1,0 +1,22 @@
+[Unit]
+Description=aria2 daemon
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/aria2c \
+        --enable-rpc --rpc-listen-all --rpc-secret=xxxxx \
+        --dir=/home/agneev/aria \
+        --on-download-complete=/home/agneev/scripts/aria_post_dl.sh \
+        --max-connection-per-server=16 --split=16 \
+        --disk-cache=512M --file-allocation=none \
+        --bt-enable-lpd=true \
+        --disable-ipv6=true \
+        -q --log-level=warn --log=/tmp/aria.log
+KillMode=process
+Restart=always
+User=agneev
+Group=agneev
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=qBittorrent daemon
+Documentation=man:qbittorrent-nox(1)
+After=network-online.target nss-lookup.target
+
+[Service]
+Type=simple
+User=agneev
+ExecStart=/usr/bin/qbittorrent-nox
+TimeoutStopSec=infinity
+
+[Install]
+WantedBy=multi-user.target

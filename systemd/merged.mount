@@ -1,0 +1,12 @@
+[Unit]
+Description = mergerFS mount
+RequiresMountsFor = /mnt/pool/*
+
+[Mount]
+What = /mnt/pool/*
+Where = /merged
+Type = fuse.mergerfs
+Options = defaults,dropcacheonclose=true,category.create=rand,allow_other,use_ino,fsname=mergerFS
+
+[Install]
+WantedBy = multi-user.target
