@@ -9,15 +9,12 @@ Most of the code/files are in their folders in this repository.
     + [Primary Server](#primary-server---pi4--)
     + [Secondary Server](#secondary-server---always-on--)
   * [Software](#software)
-    + [Smart Home](#smart-home)
-    + [System Monitoring](#system-monitoring)
-    + [Others](#others)
-  * [File management 🗃](#file-management---)
-    + [rclone ☁️](#rclone---)
-    + [mergerFS 💿](#mergerfs---)
-  * [Media management ⏯](#media-management--)
-  * [Backups and updates ↕️](#backups-and-updates---)
-  * [Notes 💬](#notes---)
+  * [File management](#file-management)
+    + [rclone](#rclone)
+    + [mergerFS](#mergerfs)
+  * [Media management](#media-management)
+  * [Backups and updates](#backups-and-updates)
+  * [Notes](#notes)
 
 
 ## Hardware
@@ -46,7 +43,7 @@ I run two servers at home, currently. The primary is a Raspberry Pi 4 and the se
 The heat sink is required because the Pi is overclocked and runs very hot. With it, temperatures are lowered and there is no CPU throttling unless the server is under very heavy loads.
 I opted to not use a fan because they are not reliable and very noisy.
 
-<img src=".github/assets/pi3.jpg" width="300">
+<img src=".github/assets/pi3.png" width="300">
 
 ### Secondary Server (`always-on`) 
 * Raspberry Pi 3B+
@@ -57,8 +54,6 @@ I opted to not use a fan because they are not reliable and very noisy.
 
 ## Software
 I run a lot of FOSS software and applications on my servers.
-
-An inexhaustible list:
 
 * Plex Media Server 📽
   * Tautulli 📊
@@ -82,21 +77,21 @@ An inexhaustible list:
 * AdGuard Home 🌎
 * Raspotify 🎶
 
-### Smart Home
+Smart Home
 * Home Assistant ([separate repo](https://github.com/agneevx/my-ha-setup))
 * Homebridge 📱
 * Node-RED 🧩
 
-![bashtop](.github/assets/bashtop.jpg "Bashtop running inside Cockpit, powered by NGINX reverse proxy, using AdGuard Home")
+![bashtop](.github/assets/bashtop.jpg "Bashtop running inside Cockpit, powered by NGINX, using AdGuard Home")
 
-### System Monitoring
+System Monitoring
 * Cockpit ✈️
 * Webmin - Web admin panel 🛠
 * Netdata 👀
 * `webssh`
 * `vnstat`, `iftop`, `ncdu`, `nmon` and `iostat`
 
-### Others
+Others
 * mergerFS
 * Samba File Sharing (SMB)
 * Librespeed - LAN speed tests for diagnostics 
@@ -106,12 +101,13 @@ An inexhaustible list:
 
 All third-party software are located at `/opt`
 
+***
 
-## File management 🗃
+## File management
 
 I store data both locally and in the cloud. Less accessed files are stored in the cloud and more important/frequently accessed files or rather large files are stored locally.
 
-### rclone ☁️
+### rclone
 
 rclone is used to access and transfer files to/from the cloud. Most of my files are stored there. rclone is also used for backups.
 
@@ -124,7 +120,7 @@ The mount options I use ensure the accessed data is buffered in memory before be
 
 rclone's vast array of utilities let's me use it as an alternative to `rsync`, `md5sum` or `du`.
 
-### mergerFS 💿
+### mergerFS
 
 All of my hard disks are formatted in `ext4` (with no reserved space) and are mounted inside `/mnt/pool` at startup by `fstab`.
 
@@ -132,7 +128,9 @@ At startup, mergerFS creates a FUSE mount and combines all of these drives into 
 
 This way, I am able to store and access all my files from a single mount point. 
 
-## Media management ⏯
+***
+
+## Media management
 
 I use Plex to play content on my devices from my server, simply because there is no other media server that has broader support and better UX than Plex.
 Both `/merged` and `/drive` are added to Plex because I store media in both places.
@@ -166,7 +164,9 @@ Sonarr Release profiles:
 
 ![sonarr_release_profile](.github/assets/sonarr_release_profile.jpg "Sonarr Release Profiles")
 
-## Backups and updates ↕️
+***
+
+## Backups and updates
 
 Every day at 9PM, a couple of scripts run that backup certain important files to my cloud drive using rclone.
 
@@ -176,7 +176,9 @@ These tasks are done by cron jobs and use Healthchecks.io for status reporting. 
 
 All backup scripts are under the `backup` folder inside `scripts`.
 
-## Notes 💬
+***
+
+## Notes
 
 * Some applications have a delayed startup (by cron job)
 ```text
