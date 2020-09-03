@@ -5,16 +5,16 @@ My server setup at home
 Most of the code/files are in their folders in this repository.
 
 - [My Server Setup](#my-server-setup)
-  * [Hardware](#hardware)
-    + [Primary Server](#primary-server---pi4--)
-    + [Secondary Server](#secondary-server---always-on--)
-  * [Software](#software)
-  * [File management](#file-management)
-    + [rclone](#rclone)
-    + [mergerFS](#mergerfs)
-  * [Media management](#media-management)
-  * [Backups and updates](#backups-and-updates)
-  * [Notes](#notes)
+  - [Hardware](#hardware)
+    - [Primary Server (`pi4`)](#primary-server-pi4)
+    - [Secondary Server (`always-on`)](#secondary-server-always-on)
+  - [Software](#software)
+  - [File management](#file-management)
+    - [rclone](#rclone)
+    - [mergerFS](#mergerfs)
+  - [Media management](#media-management)
+  - [Backups and updates](#backups-and-updates)
+  - [Notes](#notes)
 
 
 ## Hardware
@@ -43,7 +43,7 @@ I run two servers at home, currently. The primary is a Raspberry Pi 4 and the se
 The heat sink is required because the Pi is overclocked and runs very hot. With it, temperatures are lowered and there is no CPU throttling unless the server is under very heavy loads.
 I opted to not use a fan because they are not reliable and very noisy.
 
-<img src=".github/assets/pi3.png" width="300">
+<img src="https://user-images.githubusercontent.com/19761269/91994868-b9e43d00-ed54-11ea-8373-33e8160645e0.png" width="300">
 
 ### Secondary Server (`always-on`) 
 * Raspberry Pi 3B+
@@ -89,14 +89,14 @@ System Monitoring
 * Webmin - Web admin panel 🛠
 * Netdata 👀
 * `webssh`
-* `vnstat`, `iftop`, `ncdu`, `nmon` and `iostat`
+* `vnstat`, `bashtop`, `iftop`, `ncdu`, `nmon` and `iostat`
 
 Others
 * mergerFS
 * Samba File Sharing (SMB)
 * Librespeed - LAN speed tests for diagnostics 
 * `speedtest` - official Speedtest.net CLI
-* Nginx 💻
+* Nginx
   * Organizr v2 (using PHP 7.1)
 
 All third-party software are located at `/opt`
@@ -186,7 +186,7 @@ All backup scripts are under the `backup` folder inside `scripts`.
 ```
 
 <b id="fn1">1.</b> 
-`/boot/config.txt`: [↩](#a1)
+`/boot/config.txt`: [↩](#fn1)
 ```text
 over_voltage=4
 arm_freq=1950
