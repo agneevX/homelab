@@ -20,7 +20,7 @@ Most of the code/files are in their folders in this repository.
 ## Hardware
 I run two servers at home, currently. The primary is a Raspberry Pi 4 and the secondary is a Raspberry Pi 3B+.
 
-<img src=".github/assets/pi4.png" width="300">
+<img src="https://www.raspberrypi.org/homepage-9df4b/static/hero-shot-33d83b8c5fa0933373dabcc9462b32a3.png" width="300">
 
 ### Primary Server (`pi4`) 
 * Raspberry Pi 4 (4GB model)
@@ -56,25 +56,25 @@ I opted to not use a fan because they are not reliable and very noisy.
 I run a lot of FOSS software and applications on my servers.
 
 * Plex Media Server 📽
-  * Tautulli 📊
+  * Tautulli
   * Kitana
   * `plex-autoscan`
-* rclone 💾
-* VS Code (`code-server`) 👨‍💻
-* *arrs ⏳
+* rclone
+* VS Code (`code-server`)
+* *arrs
    * Radarr, Sonarr, Lidarr, Bazarr and Jackett
 * qBittorrent 🧲
   * `qb-web` front-end
   * `qbittorrent-bot`
-* aria2 (my preferred HTTP downloader) ⏬
+* aria2 ⬇️
   * `webui-aria2`
   * `tele-aria2`
-* rtorrent ⬇️
+* rtorrent
   * flood front-end
   * `rutorrent` alt. front-end
 * Shairport-Sync 🎶
-* `cloud-torrent` ⤵️
-* AdGuard Home 🌎
+* `cloud-torrent`
+* AdGuard Home
 * Raspotify 🎶
 
 Smart Home
@@ -82,7 +82,7 @@ Smart Home
 * Homebridge 📱
 * Node-RED 🧩
 
-![bashtop](.github/assets/bashtop.jpg "Bashtop running inside Cockpit, powered by NGINX, using AdGuard Home")
+![bashtop](https://user-images.githubusercontent.com/19761269/92083603-e7c49280-ede3-11ea-8629-656388ad1c10.png "Bashtop running inside Cockpit, powered by NGINX, using AdGuard Home")
 
 System Monitoring
 * Cockpit ✈️
@@ -142,7 +142,7 @@ On my phone, I use Varys, Watcht, Tautulli and Plex to keep track of my media an
 
 Because of my media files cloud being stored in the cloud, there are certain options I have made to prevent unnecessary data use:
 
-![plex_settings](.github/assets/plex_settings.jpg "Plex Library Settings")
+![plex_settings](https://user-images.githubusercontent.com/19761269/92083230-55bc8a00-ede3-11ea-92d1-f5d444f1df45.jpg "Plex Library Settings")
 
 <b>*arrs</b> ⤵️
 
@@ -162,7 +162,7 @@ I use StevenLu's list only for Radarr auto-import.
 
 Sonarr Release profiles:
 
-![sonarr_release_profile](.github/assets/sonarr_release_profile.jpg "Sonarr Release Profiles")
+![sonarr_release_profile](https://user-images.githubusercontent.com/19761269/92083243-59e8a780-ede3-11ea-925e-0f846671c870.jpg "Sonarr Release Profiles")
 
 ***
 
