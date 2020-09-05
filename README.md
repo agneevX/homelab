@@ -2,8 +2,6 @@
 
 My server setup at home
 
-Most of the code/files are in their folders in this repository.
-
 - [My Server Setup](#my-server-setup)
   - [Hardware](#hardware)
     - [Primary Server (`pi4`)](#primary-server-pi4)
@@ -26,19 +24,19 @@ I run two servers at home, currently. The primary is a Raspberry Pi 4 and the se
 * Raspberry Pi 4 (4GB model)
   * overclocked to 1.95GHz<sup>[1](#fn1)</sup>
   * Raspberry Pi OS Debian Buster
-* [Aluminum heatsink](https://shop.pimoroni.com/products/aluminium-heatsink-case-for-raspberry-pi-4?variant=29430673178707) 🌡
-* Sandisk Ultra microSD card (8GB) - boot 
-* Primary storage 📀
+* 🌡 [Aluminum heatsink](https://shop.pimoroni.com/products/aluminium-heatsink-case-for-raspberry-pi-4?variant=29430673178707)
+* 💾 Sandisk Ultra microSD card (8GB, boot)
+* 📼 Primary storage
   * Crucial MX500 SSD (256GB) w/ Orico USB 3.0 enclosure
-* Powered USB 3.0 hub 
+* 🔌 Powered USB 3.0 hub 
   * TP-Link TL-UH700
-* Secondary storage 💾
+* 📀 Secondary storage 
   * (x1) Seagate Expansion 4TB 
   * (x1) Seagate Barracuda 2.5" 1TB w/ Orico enclosure
   * (x1) WD My Passport 1TB
   * (x1) Sony 2.5" External HDD 1TB
-* Gigabit Ethernet 🌐
-* AUX out to soundbar 🎵
+* 🌐 Gigabit Ethernet
+* 🔊 AUX out to soundbar
 
 The heat sink is required because the Pi is overclocked and runs very hot. With it, temperatures are lowered and there is no CPU throttling unless the server is under very heavy loads.
 I opted to not use a fan because they are not reliable and very noisy.
@@ -48,58 +46,64 @@ I opted to not use a fan because they are not reliable and very noisy.
 ### Secondary Server (`always-on`) 
 * Raspberry Pi 3B+
   * Raspberry Pi OS Lite - Debian Buster
-* 16GB microSD card
+* 📼 16GB microSD card
 
 `always-on` functions as a DNS server and runs limited software.
 
 ## Software
-I run a lot of FOSS software and applications on my servers.
+I run a lot of applications and FOSS software on my servers.
 
-* Plex Media Server 📽
+* 📽 Plex Media Server
   * Tautulli
   * Kitana
   * `plex-autoscan`
-* rclone
-* VS Code (`code-server`)
-* *arrs
+* ☁️ rclone
+* 👨‍💻 VS Code (`code-server`)
+* ⏳ ..arrs
    * Radarr, Sonarr, Lidarr, Bazarr and Jackett
-* qBittorrent 🧲
+* 🧲 qBittorrent 
   * `qb-web` front-end
   * `qbittorrent-bot`
-* aria2 ⬇️
+* ⏬ aria2 
   * `webui-aria2`
   * `tele-aria2`
-* rtorrent
-  * flood front-end
-  * `rutorrent` alt. front-end
-* Shairport-Sync 🎶
-* `cloud-torrent`
-* AdGuard Home
-* Raspotify 🎶
+* mopidy
+  * `mopidy-mpd`
+* 🔽 rtorrent
+  * `flood` front-end
+  * `rutorrent` front-end
+* 🎶 Shairport-Sync
+* 🎶 Raspotify
+* ⤵️ `cloud-torrent`
+* 🌎 AdGuard Home
 
-Smart Home
-* Home Assistant ([separate repo](https://github.com/agneevx/my-ha-setup))
-* Homebridge 📱
-* Node-RED 🧩
 
-![bashtop](https://user-images.githubusercontent.com/19761269/92083603-e7c49280-ede3-11ea-8629-656388ad1c10.png "Bashtop running inside Cockpit, powered by NGINX, using AdGuard Home")
+Smart Home 🏠
 
-System Monitoring
-* Cockpit ✈️
-* Webmin - Web admin panel 🛠
-* Netdata 👀
-* `webssh`
+* 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
+* 📱 Homebridge
+
+![bashtop](https://user-images.githubusercontent.com/19761269/92084333-dd56c880-ede4-11ea-9c97-f22d6bf39744.jpg "Bashtop running inside Cockpit, powered by NGINX, with help from AdGuard Home")
+
+System Monitoring 👀
+
+* ✈️ Cockpit
+* 🛠 Webmin
+* 📈 Netdata
+* 💻 `webssh`
 * `vnstat`, `bashtop`, `iftop`, `ncdu`, `nmon` and `iostat`
 
 Others
-* mergerFS
-* Samba File Sharing (SMB)
-* Librespeed - LAN speed tests for diagnostics 
-* `speedtest` - official Speedtest.net CLI
-* Nginx
+
+* 🗃 mergerFS
+* 📂 File Browser
+* 📲 Samba File Sharing (SMB)
+* 🏎 Librespeed
+* 🌐 `speedtest`
+* 🌏 Nginx
   * Organizr v2 (using PHP 7.1)
 
-All third-party software are located at `/opt`
+Most third-party software are located at `/opt`.
 
 ***
 
@@ -181,13 +185,13 @@ All backup scripts are under the `backup` folder inside `scripts`.
 ## Notes
 
 * Some applications have a delayed startup (by cron job)
-```text
+```bash
 @reboot sleep 40 && sudo systemctl start drive radarr sonarr home-assistant@homeassistant raspotify
 ```
 
 <b id="fn1">1.</b> 
-`/boot/config.txt`: [↩](#fn1)
-```text
+`/boot/config.txt`
+```bash
 over_voltage=4
 arm_freq=1950
 ```
