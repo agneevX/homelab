@@ -4,7 +4,7 @@ RequiresMountsFor = /mnt/pool/*
 
 [Mount]
 What = /mnt/pool/*
-Where = /merged
+Where = /knox
 Type = fuse.mergerfs
 Options = defaults,dropcacheonclose=true,category.create=rand,allow_other,use_ino,fsname=mergerFS
 

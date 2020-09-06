@@ -1,16 +1,15 @@
 [Unit]
-Description=Radarr Daemon
-Wants=network-online.target
+Description=Radarr daemon
 After=network-online.target
 
 [Service]
-User=agneev
-Group=agneev
 Type=simple
 ExecStart=/opt/Radarr/Radarr
 TimeoutStopSec=20
 KillMode=process
 Restart=always
+User=agneev
+Group=agneev
 
 [Install]
 WantedBy=multi-user.target

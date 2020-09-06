@@ -1,6 +1,5 @@
 [Unit]
 Description=drive (rclone)
-Wants=network-online.target
 After=network-online.target
 
 [Service]

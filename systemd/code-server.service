@@ -1,15 +1,14 @@
 [Unit]
 Description=Code Server daemon
-After=network.target
+After=network-online.target
 
 [Service]
+Type=exec
 User=agneev
 Group=agneev
 WorkingDirectory=/home/agneev/code-server
-#Environment="PATH=/home/agneev/code-server"
-ExecStart=/home/agneev/.nvm/versions/node/v12.18.2/bin/code-server \
-        --port 8124 --auth none
-Restart=on-failure
+ExecStart=code-server --port 8200 --auth none
+Restart=always
 KillMode=process
 
 [Install]
