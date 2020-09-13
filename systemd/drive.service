@@ -1,5 +1,5 @@
 [Unit]
-Description=drive (rclone)
+Description=rclone-drive daemon
 After=network-online.target
 
 [Service]
@@ -7,21 +7,18 @@ Type=notify
 Environment=RCLONE_CONFIG=/home/agneev/.config/rclone/rclone.conf
 ExecStart=/usr/bin/rclone mount \
         --allow-other \
-        --buffer-size 384M --use-mmap \
+        --buffer-size 256M --use-mmap \
         --dir-cache-time 1000h \
         --poll-interval 15s \
         -v --log-file /home/agneev/logs/drive.log \
-        --rc --rc-addr 127.0.0.1:5800 \
+        --rc --rc-addr 127.0.0.1:5800 --rc-no-auth \
         drive: /drive
 ExecStartPost=/usr/bin/rclone rc \
         vfs/refresh \
-        recursive=true \
+        recursive=true _async=true \
         --rc-addr 127.0.0.1:5800
 ExecStop=/bin/fusermount -uz /drive
 KillMode=none
 Restart=always
 User=agneev
 Group=agneev
-
-[Install]
-WantedBy=multi-user.target

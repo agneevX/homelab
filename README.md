@@ -17,7 +17,6 @@ My server setup at home
   - [Backups and updates](#backups-and-updates)
   - [Notes](#notes)
 
-
 ## Hardware
 I run two servers at home, currently. The primary is a Raspberry Pi 4 and the secondary is a Raspberry Pi 3B+.
 
@@ -65,16 +64,18 @@ I run a lot of applications and FOSS software on my servers...
 * 👨‍💻 VS Code (`code-server`)
 * ⏳ ..arrs
    * Sonarr, Radarr, and Bazarr
-* 🔈 Mopidy
-  * `mopidy-mpd`
-  * `mopidy-iris`
-  * `mopidy-youtube`
 * 🧲 qBittorrent 
   * `qb-web` front-end
   * `qbittorrent-bot`
 * ⏬ aria2 
   * `webui-aria2`
   * `tele-aria2`
+* 🔈 Mopidy
+  * `mopidy-mpd`
+  * `mopidy-iris`
+  * `mopidy-youtube`
+* 🌐 Nginx
+  * Organizr v2 (using PHP 7.1)
 * 🌎 AdGuard Home
 * 🎶 Shairport-Sync
 * 🎶 Raspotify
@@ -100,8 +101,6 @@ Others
 * 🗂 Samba (SMB)
 * 🏎 Librespeed
 * 🌐 `speedtest`
-* 🌏 Nginx
-  * Organizr v2 (using PHP 7.1)
 * ⤵️ `cloud-torrent`
 * 🔽 rtorrent
   * `flood` front-end
@@ -126,15 +125,15 @@ The mount also enables access of files by running applications, and Plex is able
 
 The mount options I use ensure the accessed data is buffered in memory before being sent to the client, which results in better responsiveness and throughput.
 
-rclone's vast array of utilities let's me use it as an alternative to `rsync`, `md5sum` or `du`.
+I also use rclone's vast array of user-friendly CLI tools as alternatives to `rsync`, `md5sum` or `du`.
 
 ### mergerFS
 
-All of my hard disks are formatted in `ext4` (with no reserved space) and are mounted inside `/mnt/pool` at startup by `fstab`.
+All hard disks are formatted in `ext4` (with no reserved space) and mounted inside `/mnt/pool` at startup with `fstab` entries.
 
-At startup, mergerFS creates a FUSE mount and combines all of these drives into a single mount point, `/knox`. I use a systemd mount file for this purpose.
+Also at startup, mergerFS combines all external drives and creates a single FUSE mount point, `/knox`. A systemd mount file is used for this purpose.
 
-This way, I am able to store and access all my files from a single mount point. 
+This way, I am able to store and access all my files from a single mount point, even though the data is spread out randomly across all volumes.
 
 ***
 
@@ -145,10 +144,10 @@ Both `/knox` and `/drive` are added to Plex because I store media in both places
 
 Tautulli tracks and stores details of playback and generates statistics and graphs from the information. I use Kitana to manage plugins on my Plex Media Server.
 
-I use a forked version of the [`Plex-Trakt-Scrobbler`](https://github.com/rg9400/Plex-Trakt-Scrobbler) plugin that allows me to store and sync watched details and media information to Trakt.tv, which is a fantastic service I use to track movies and TV shows that I'm watching.
-On my phone, I use Varys, Watcht, Tautulli and Plex to keep track of my media and what I'm watching.
+I use a forked version of the [`Plex-Trakt-Scrobbler`](https://github.com/rg9400/Plex-Trakt-Scrobbler) plugin that allows me to store and sync watched details and media information to Trakt.tv, which is a fantastic service I use to track movies and TV shows.
+On my phone, I use Varys, Watcht, Tautulli and Plex to manage my Plex server, media files and keep track of what I'm watching.
 
-Because of my media files cloud being stored in the cloud, there are certain options I have made to prevent unnecessary data use:
+Because of my media files being stored in the cloud, I've changed a few settings to prevent unnecessary data use.
 
 ![plex_settings](https://user-images.githubusercontent.com/19761269/92083230-55bc8a00-ede3-11ea-92d1-f5d444f1df45.jpg "Plex Library Settings")
 
@@ -156,19 +155,19 @@ Because of my media files cloud being stored in the cloud, there are certain opt
 
 The process of grabbing new content for playback in Plex is automated via software aka *arrs. They aren't perfect but they're the best way to manage media content.
 
-Radarr is used for movies, Sonarr for TV Shows.
-Lidarr and Bazarr is used for music and subtitles respectively, but I do not actively use them.
+Radarr is used for movies while Sonarr for TV Shows.
+Lidarr and Bazarr is used for music and subtitles respectively, but I don't actively use them.
 
 Currently, I'm running the beta versions of Radarr (`aphrodite` branch) and Sonarr (`phantom-develop` branch). 
 
 Depending on the content, I either download and keep a 1080p version or a 4K version.
 Radarr and Sonarr automatically upgrade versions, so a 1080p WEB-DL automatically upgrades to a 1080p Blu-Ray when it becomes available.
 
-My preferred torrent downloader that I use is qBittorrent. It's most compatible and I've had little to no issues with it over time.
+My preferred torrent downloader is qBittorrent. It's most compatible and with a Telegram bot, I can manage torrents remotely with no port forwarding.
 
-I use StevenLu's list only for Radarr auto-import.
+For Radarr auto-import, I use StevenLu's list only.
 
-Sonarr Release profiles:
+For Sonarr , these are my release profiles:
 
 ![sonarr_release_profile](https://user-images.githubusercontent.com/19761269/92083243-59e8a780-ede3-11ea-925e-0f846671c870.jpg "Sonarr Release Profiles")
 
@@ -203,11 +202,11 @@ These are some of my favorite extensions:
 
 ## Backups and updates
 
-Every day at 9PM, a couple of scripts run that backup certain important files to my cloud drive using rclone.
+Every day at 9PM, a couple of scripts run that backup certain important files/databases to my cloud drive using rclone.
 
-Every Sunday at 9PM, a script runs on both servers that automatically update its software.
+Every Sunday at 9PM, a script runs on both servers that automatically update its firmware.
 
-These tasks are done by cron jobs and use Healthchecks.io for status reporting. Further I'm able to receive notifications on my phone with the Healthchecks telegram bot if these jobs do not complete
+These tasks are done by cron jobs and I use Healthchecks.io for status reporting. Further, I receive notifications with the Healthchecks Telegram bot if these jobs fail to complete.
 
 All backup scripts are under the `backup` folder inside `scripts`.
 
@@ -215,13 +214,13 @@ All backup scripts are under the `backup` folder inside `scripts`.
 
 ## Notes
 
-* Some applications have a delayed startup (by cron job)
+* Some applications have a delayed startup (by cron job):
 ```bash
 @reboot sleep 40 && sudo systemctl start drive radarr sonarr home-assistant@homeassistant raspotify
 ```
 
 <b id="fn1">1.</b> 
-`/boot/config.txt`
+`/boot/config.txt`:
 ```bash
 over_voltage=4
 arm_freq=1950

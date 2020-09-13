@@ -1,6 +1,6 @@
 [Unit]
 Description=webui-aria2 daemon
-After=network-online.target
+After=aria2.service
 
 [Service]
 Type=simple

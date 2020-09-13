@@ -6,8 +6,8 @@ After=network-online.target nss-lookup.target
 Type=forking
 ExecStart=/usr/bin/python3 /opt/Tautulli/Tautulli.py \
         --config /opt/Tautulli/config.ini \
-		--datadir /opt/Tautulli \
-		--quiet --daemon --nolaunch
+        --datadir /opt/Tautulli \
+        --quiet --daemon --nolaunch
 StartLimitInterval=90
 StartLimitBurst=3
 GuessMainPID=no

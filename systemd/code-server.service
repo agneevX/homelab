@@ -1,15 +1,12 @@
 [Unit]
-Description=Code Server daemon
+Description=code-server daemon
 After=network-online.target
 
 [Service]
 Type=exec
 User=agneev
 Group=agneev
-WorkingDirectory=/home/agneev/code-server
-ExecStart=code-server --port 8200 --auth none
-Restart=always
-KillMode=process
+ExecStart=/usr/bin/code-server --port 8200 --auth none
 
 [Install]
 WantedBy=multi-user.target

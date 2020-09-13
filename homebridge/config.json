@@ -1,9 +1,9 @@
 {
     "bridge": {
         "name": "Homebridge",
-        "username": "xxxxxx",
+        "username": "xxxxx",
         "port": 51910,
-        "pin": "xxxxxx"
+        "pin": "xxxxx"
     },
     "accessories": [],
     "platforms": [
@@ -26,16 +26,16 @@
             "name": "Camera ffmpeg",
             "cameras": [
                 {
-                    "name": "Front Gate Camera",
+                    "name": "Front Gate",
                     "manufacturer": "D-Link",
                     "model": "DCS-933L",
                     "firmwareRevision": "1.15.01",
                     "motion": false,
                     "unbridge": false,
                     "videoConfig": {
-                        "source": "-re -f mjpeg -i http://admin:xxxxxx@10.0.0.20/mjpeg.cgi",
-                        "stillImageSource": "-i http://admin:xxxxxx@10.0.0.20/image/jpeg.cgi",
-                        "maxStreams": 1,
+                        "source": "-re -f mjpeg -i http://admin:xxxxx@10.0.0.20/mjpeg.cgi",
+                        "stillImageSource": "-i http://admin:xxxxx@10.0.0.20/image/jpeg.cgi",
+                        "maxStreams": 4,
                         "maxWidth": 0,
                         "maxHeight": 0,
                         "maxFPS": 0,
@@ -56,13 +56,15 @@
                 {
                     "name": "Bedroom TV",
                     "ip": "10.0.0.60",
-                    "mac": "xxxxxx",
+                    "mac": "xxxxx",
                     "pollingInterval": 10,
-                    "volumeControl": "none",
                     "volumeLimit": 100,
+                    "volumeControl": "none",
                     "channelControl": false,
-                    "infoButtonAction": "HOME",
-                    "inputs": [
+                    "ccRemoteRemap": {
+                        "information": "HOME"
+                    },
+                    "appButtons": [
                         {
                             "appId": "com.webos.app.hdmi1",
                             "name": "HDMI 1"
@@ -100,13 +102,15 @@
                 {
                     "name": "Old Room TV",
                     "ip": "10.0.0.61",
-                    "mac": "xxxxxx",
+                    "mac": "xxxxx",
                     "pollingInterval": 10,
-                    "volumeControl": "none",
                     "volumeLimit": 100,
+                    "volumeControl": "none",
                     "channelControl": false,
-                    "infoButtonAction": "HOME",
-                    "inputs": [
+                    "ccRemoteRemap": {
+                        "information": "HOME"
+                    },
+                    "appButtons": [
                         {
                             "appId": "youtube.leanback.v4",
                             "name": "YouTube"
@@ -136,13 +140,15 @@
                 {
                     "name": "New Room TV",
                     "ip": "10.0.0.62",
-                    "mac": "xxxxxx",
+                    "mac": "xxxxx",
                     "pollingInterval": 10,
-                    "volumeControl": "none",
                     "volumeLimit": 100,
+                    "volumeControl": "none",
                     "channelControl": false,
-                    "infoButtonAction": "HOME",
-                    "inputs": [
+                    "ccRemoteRemap": {
+                        "information": "HOME"
+                    },
+                    "appButtons": [
                         {
                             "appId": "youtube.leanback.v4",
                             "name": "YouTube"

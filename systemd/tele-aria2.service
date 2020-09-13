@@ -1,17 +1,10 @@
 [Unit]
-Description=tele-aria2 Daemon
-Wants=aria2.service
+Description=tele-aria2 daemon
 After=aria2.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/tele-aria2 \
-        --aria2-server http://127.0.0.1:6800/jsonrpc \
-        --aria2-key xxxxx \
-        --bot-key xxxxx:xxxxx \
-        --user-id xxxxx
-KillMode=process
-Restart=on-failure
+ExecStart=/usr/bin/tele-aria2 -c /home/agneev/.config/tele-aria2/config.json
 User=agneev
 Group=agneev
 
