@@ -5,16 +5,17 @@ After=network-online.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/aria2c \
-        --enable-rpc --rpc-listen-all --rpc-secret=xxxxx \
-        --dir=/home/agneev/aria \
+        --no-conf=true \
+        --dir=/home/agneev/.temp \
         --on-download-complete=/home/agneev/scripts/aria_post_dl.sh \
         --max-connection-per-server=16 --split=16 \
-        --disk-cache=512M --file-allocation=none \
-        --bt-enable-lpd=true \
-        --disable-ipv6=true \
-        -q --log-level=warn --log=/tmp/aria.log
-KillMode=process
-Restart=always
+        --disk-cache=128M --file-allocation=falloc --enable-mmap \
+        --retry-wait=30 --max-tries=50 \
+        --save-session=/home/agneev/.aria2.session --save-session-interval=5 \
+        --input-file=/home/agneev/.aria2.session \
+        --enable-rpc --rpc-listen-all --rpc-allow-origin-all \
+        --bt-enable-lpd=true --disable-ipv6=true \
+        -q --log-level=warn
 User=agneev
 Group=agneev
 

@@ -4,7 +4,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/speedtest/src
+WorkingDirectory=/opt/librespeed/src
 ExecStart=/usr/bin/node SpeedTest.js
 KillMode=process
 Restart=always

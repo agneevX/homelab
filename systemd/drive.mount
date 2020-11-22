@@ -1,0 +1,12 @@
+[Unit]
+Description = mergerFS rclone-drive mount
+RequiresMountsFor = /mnt/drive
+
+[Mount]
+What = /opt/.drive:/mnt/drive
+Where = /drive
+Type = fuse.mergerfs
+Options = defaults,func.getattr=newest,dropcacheonclose=true,cache.files=auto-full,category.action=all,category.create=ff,allow_other,use_ino,fsname=rclone_drive
+
+[Install]
+WantedBy = multi-user.target

@@ -4,12 +4,12 @@ My server setup at home
 
 - [My Server Setup](#my-server-setup)
   - [Hardware](#hardware)
-    - [Primary Server (`pi4`)](#primary-server-pi4)
-    - [Secondary Server (`always-on`)](#secondary-server-always-on)
+    - [Media server](#media-server)
+    - [Server 2](#server-2)
   - [Software](#software)
   - [File management](#file-management)
-    - [rclone](#rclone)
-    - [mergerFS](#mergerfs)
+    - [Cloud storage](#cloud-storage)
+    - [Local storage](#local-storage)
   - [Media management](#media-management)
   - [VS Code](#vs-code)
     - [Plugins](#plugins)
@@ -18,210 +18,179 @@ My server setup at home
   - [Notes](#notes)
 
 ## Hardware
-I run two servers at home, currently. The primary is a Raspberry Pi 4 and the secondary is a Raspberry Pi 3B+.
 
-<img src="https://www.raspberrypi.org/homepage-9df4b/static/hero-shot-33d83b8c5fa0933373dabcc9462b32a3.png" width="300">
+I run two Raspberry Pi 4 as servers at home presently.
 
-### Primary Server (`pi4`) 
-* Raspberry Pi 4 (4GB model)
-  * overclocked to 1.95GHz<sup>[1](#fn1)</sup>
-  * Raspberry Pi OS Debian Buster
-* 🌡 [Aluminum heatsink](https://shop.pimoroni.com/products/aluminium-heatsink-case-for-raspberry-pi-4?variant=29430673178707)
-* 💾 Sandisk Ultra microSD card (8GB, boot)
-* 📼 Primary storage
-  * Crucial MX500 SSD (256GB) w/ Orico USB 3.0 enclosure
-* 🔌 Powered USB 3.0 hub 
-  * TP-Link TL-UH700
-* 📀 Secondary storage 
-  * (x1) Seagate Expansion 4TB 
-  * (x1) Seagate Barracuda 2.5" 1TB w/ Orico enclosure
-  * (x1) WD My Passport 1TB
-  * (x1) Sony 2.5" External HDD 1TB
-* 🌐 Gigabit Ethernet
-* 🔊 AUX out to soundbar
+<img src="https://user-images.githubusercontent.com/19761269/99898364-ea3dd680-2cc6-11eb-9216-89c2240ed0af.png" width="300">
 
-The heat sink is required because the Pi is overclocked and runs very hot. With it, temperatures are lowered and there is no CPU throttling unless the server is under a heavy load.
-I opted to not use a fan because they're noisy and not reliable.
+### Media server
 
-<img src="https://user-images.githubusercontent.com/19761269/91994868-b9e43d00-ed54-11ea-8373-33e8160645e0.png" width="300">
+`server`
 
-### Secondary Server (`always-on`) 
-* Raspberry Pi 3B+
-  * Raspberry Pi OS Lite - Debian Buster
-* 📼 16GB microSD card
+- Raspberry Pi 4 (8GB model)
+  - Raspberry Pi OS Lite - Debian Buster
+  - Overclocked to 2.1GHz
+- 🔌 Powered USB 3.0 hub
+  - TP-Link TL-UH700
+- 📼 Primary storage
+  - Sandisk Ultra microSD card (8GB, boot)
+  - Crucial BX500 SSD (480GB, root)
+- 📀 Secondary storage
+  - Seagate Expansion 4TB
+  - Seagate Barracuda 2.5" 1TB
+  - WD My Passport 1TB
+  - Sony HD-B1 1TB
+- 🌐 Ethernet (Gigabit)
+  - TP-Link TL-SG1008D
+- 🔊 3.5mm out...
+  - Fenda E200 Plus
 
-`always-on` functions primarily as a DNS server and runs limited software.
+<img src="https://www.raspberrypi.org/homepage-9df4b/static/raspberry-pi-os-32bit-3697e93ad6828805810ffa5f4651423c.jpg" width="300">
+
+### Server 2
+
+`always-on`
+
+- Raspberry Pi 4 (4GB model)
+  - Raspberry Pi OS Lite - Debian Buster
+- 📼 32GB microSD card
+- 🌐 Ethernet (Gigabit)
+
+`always-on` functions primarily as a network blocker and runs limited software such as Homebridge.
 
 ## Software
-I run a lot of applications and FOSS software on my servers...
 
-* 📽 Plex Media Server
-  * Tautulli
-  * Kitana
-  * `plex-autoscan`
-* ☁️ rclone
-* 🗃 mergerFS
-* 👨‍💻 VS Code (`code-server`)
-* ⏳ ..arrs
-   * Sonarr, Radarr, and Bazarr
-* 🧲 qBittorrent 
-  * `qb-web` front-end
-  * `qbittorrent-bot`
-* ⏬ aria2 
-  * `webui-aria2`
-  * `tele-aria2`
-* 🔈 Mopidy
-  * `mopidy-mpd`
-  * `mopidy-iris`
-  * `mopidy-youtube`
-* 🌐 Nginx
-  * Organizr v2 (using PHP 7.1)
-* 🌎 AdGuard Home
-* 🎶 Shairport-Sync
-* 🎶 Raspotify
+- 📽 Plex Media Server
+  - Tautulli
+  - `plex-autoscan`
+- ☁️ rclone
+- 🗃 mergerFS
+- 👨‍💻 VS Code (`code-server`)
+- ⏳ ..arrs
+  - Sonarr, Radarr,
+  - Bazarr, Jackett and Tdarr
+- 🧲 qBittorrent
+  - `qb-web` front-end
+- ⏬ aria2
+  - `ariaNg` front-end
+  - `tele-aria2`
+- 🌎 AdGuard Home
 
 Smart Home 🏠
 
-* 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
-* 📱 Homebridge
+- 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
+- 📱 Homebridge
 
 ![bashtop](https://user-images.githubusercontent.com/19761269/92084333-dd56c880-ede4-11ea-9c97-f22d6bf39744.jpg "Bashtop running inside Cockpit, powered by NGINX, with help from AdGuard Home")
 
 System Monitoring 👀
 
-* ✈️ Cockpit
-* 🛠 Webmin
-* 📈 Netdata
-* 💻 `webssh`
-* `vnstat`, `bashtop`, `iftop`, `ncdu`, `nmon` and `iostat`
+- ✈️ Cockpit
+- 🛠 Webmin
+- 📈 Netdata
+- 💻 `webssh`
+- `vnstat`, `bashtop`, `iftop`, `iotop` and `iostat`
 
-Others
+Others 💬
 
-* 📂 File Browser
-* 🗂 Samba (SMB)
-* 🏎 Librespeed
-* 🌐 `speedtest`
-* ⤵️ `cloud-torrent`
-* 🔽 rtorrent
-  * `flood` front-end
-  * `rutorrent` front-end
+- 🌐 Nginx
+- 📂 File Browser
+- 🗂 Samba (SMB)
+- 🎶 `shairport-sync`
+- 🎶 `raspotify`
+- 🏎 Librespeed
 
 Most third-party software are located at `/opt`.
 
-***
+---
 
 ## File management
 
-I store data both locally and in the cloud. Less accessed files are stored in the cloud and more important/frequently accessed files or rather large files are stored locally.
+Files are stored both locally and in the cloud.
 
-### rclone
+### Cloud storage
 
-rclone is used to access and transfer files to/from the cloud. Most of my files are stored there. rclone is also used for backups.
+rclone is used for cloud storage to access files from the cloud and for backups. Most of my files are stored there.
 
-At startup, a systemd unit file mounts the cloud drive to the filesystem root, `/drive` and caches the entire file structure in memory.
-This results in no delay when loading folders or when Plex scans my media libraries.
+At system startup, a systemd service file using rclone mounts the cloud drive to `/drive` and caches the entire file structure in memory, while mergerFS creates a mount that combines a local folder and the rclone mount so that any newly added files are stored locally.
 
-The mount also enables access of files by running applications, and Plex is able to directly stream from the cloud as if were a local filesystem.
+Everyday at 12PM, a script moves this local content to the cloud.
 
-The mount options I use ensure the accessed data is buffered in memory before being sent to the client, which results in better responsiveness and throughput.
+The mount options used ensure the accessed data is buffered in-memory before being sent to the client, which results in better responsiveness and lower latency.
 
-I also use rclone's vast array of user-friendly CLI tools as alternatives to `rsync`, `md5sum` or `du`.
+### Local storage
 
-### mergerFS
+Also at startup, mergerFS combines all external drives and creates a single FUSE mount point, `/knox` using a systemd mount file.
 
-All hard disks are formatted in `ext4` (with no reserved space) and mounted inside `/mnt/pool` at startup with `fstab` entries.
+All disks are formatted in `ext4` (with no reserved space) and mounted inside `/mnt/pool`.
 
-Also at startup, mergerFS combines all external drives and creates a single FUSE mount point, `/knox`. A systemd mount file is used for this purpose.
-
-This way, I am able to store and access all my files from a single mount point, even though the data is spread out randomly across all volumes.
-
-***
+---
 
 ## Media management
 
-I use Plex to play content on my devices from my server, simply because there is no other media server that has broader support and better UX than Plex.
-Both `/knox` and `/drive` are added to Plex because I store media in both places.
+I use Plex to play content on my devices from my server locally.
 
-Tautulli tracks and stores details of playback and generates statistics and graphs from the information. I use Kitana to manage plugins on my Plex Media Server.
+Both `/knox` and `/drive` are added to Plex as I store content in both places.
+I've changed a few settings in Plex to reduce data use because the files are stored remotely.
 
-I use a forked version of the [`Plex-Trakt-Scrobbler`](https://github.com/rg9400/Plex-Trakt-Scrobbler) plugin that allows me to store and sync watched details and media information to Trakt.tv, which is a fantastic service I use to track movies and TV shows.
-On my phone, I use Varys, Watcht, Tautulli and Plex to manage my Plex server, media files and keep track of what I'm watching.
-
-Because of my media files being stored in the cloud, I've changed a few settings to prevent unnecessary data use.
-
-![plex_settings](https://user-images.githubusercontent.com/19761269/92083230-55bc8a00-ede3-11ea-92d1-f5d444f1df45.jpg "Plex Library Settings")
+![plex](https://user-images.githubusercontent.com/19761269/99898814-68e84300-2cca-11eb-895b-e5b800eb9440.png "Plex Library Settings")
 
 <b>..arrs</b> ⤵️
 
-The process of grabbing new content for playback in Plex is automated via software aka *arrs. They aren't perfect but they're the best way to manage media content.
+The process of grabbing new content for playback in Plex is automated via software aka -arrs.
 
-Radarr is used for movies while Sonarr for TV Shows.
-Lidarr and Bazarr is used for music and subtitles respectively, but I don't actively use them.
+Radarr is used for movies and Sonarr for TV Shows while Bazarr gathers subtitles.
+Currently, I'm running beta versions of Radarr and Sonarr.
+I use the qBittorrent torrent client.
 
-Currently, I'm running the beta versions of Radarr (`aphrodite` branch) and Sonarr (`phantom-develop` branch). 
+For Radarr auto-import, I use Trakt auto import lists.
 
-Depending on the content, I either download and keep a 1080p version or a 4K version.
-Radarr and Sonarr automatically upgrade versions, so a 1080p WEB-DL automatically upgrades to a 1080p Blu-Ray when it becomes available.
+For Sonarr, these are my release profiles:
 
-My preferred torrent downloader is qBittorrent. It's most compatible and with a Telegram bot, I can manage torrents remotely with no port forwarding.
+![sonarr_release_profiles](https://user-images.githubusercontent.com/19761269/99898367-ee69f400-2cc6-11eb-8c19-7849a0ab67d6.png "Sonarr Release Profiles")
 
-For Radarr auto-import, I use StevenLu's list only.
-
-For Sonarr , these are my release profiles:
-
-![sonarr_release_profile](https://user-images.githubusercontent.com/19761269/92083243-59e8a780-ede3-11ea-925e-0f846671c870.jpg "Sonarr Release Profiles")
-
-***
+---
 
 ## VS Code
 
-I use `code-server` as my sole code editor these days. The ability to pick-up from where I left off on most devices, is a very important reason towards this.
+<img width="1136" alt="image" src="https://user-images.githubusercontent.com/19761269/99899106-ac43b100-2ccc-11eb-9f22-d6eaf54e7fbc.png">
 
-These are some of my favorite extensions:
+I use Visual Studio Code as my sole code editor these days.
+
+These are some of my most-used extensions:
 
 ### Plugins
 
-* Code Runner
-* Bash Debug
-* Prettier
-* Bracket Pair Colorizer 2
-* Auto Rename Tag
-* indent-rainbow
-* Settings Sync
-* GitLens
-* Markdown All in One
-* YAML
-* Day Night Theme Switcher
+- Remote - SSH
+- Prettier
+- GitLens
+- Bracket Pair Colorizer 2
+- Auto Rename Tag
+- indent-rainbow
+- Markdown All in One
+- Day Night Theme Switcher
 
 ### Theme/icon packs
 
-* Atom One Dark Theme
-* Atom One Light Theme
-* Material Icon Theme
-* Synthwave' 84
+- GitHub Light
+- GitHub Dark
+- Synthwave' 84
+- Material Icon Theme
 
 ## Backups and updates
 
 Every day at 9PM, a couple of scripts run that backup certain important files/databases to my cloud drive using rclone.
 
-Every Sunday at 9PM, a script runs on both servers that automatically update its firmware.
+These tasks are done by cron jobs and I use Healthchecks.io for monitoring. I receive notifications from the Healthchecks Telegram bot if jobs fail to complete.
 
-These tasks are done by cron jobs and I use Healthchecks.io for status reporting. Further, I receive notifications with the Healthchecks Telegram bot if these jobs fail to complete.
+All backup scripts are located inside `./scripts/backup`.
 
-All backup scripts are under the `backup` folder inside `scripts`.
-
-***
+---
 
 ## Notes
 
-* Some applications have a delayed startup (by cron job):
-```bash
-@reboot sleep 40 && sudo systemctl start drive radarr sonarr home-assistant@homeassistant raspotify
-```
+- Some applications have a delayed startup (cron):
 
-<b id="fn1">1.</b> 
-`/boot/config.txt`:
 ```bash
-over_voltage=4
-arm_freq=1950
+@reboot sleep 40 && sudo systemctl start drive radarr sonarr hass
 ```

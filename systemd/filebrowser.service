@@ -1,0 +1,17 @@
+[Unit]
+Description=filebrowser daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/filebrowser \
+        --root /home/agneev \
+        --address '0.0.0.0' \
+        --port 9800 \
+        --config /home/agneev/.config/filebrowser/config.json \
+        --database /home/agneev/.config/filebrowser/filebrowser.db
+User=agneev
+Group=agneev
+
+[Install]
+WantedBy=multi-user.target
