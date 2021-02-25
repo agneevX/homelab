@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # Homelab Setup
 
 My servers setup at home
@@ -14,7 +15,7 @@ My servers setup at home
 
 ## Hardware
 
-I run two Raspberry Pi 4 as servers presently.
+I run two Raspberry Pi 4s' as servers currently.
 
 ### NAS Server
 
@@ -43,19 +44,18 @@ I run two Raspberry Pi 4 as servers presently.
 Runs:
 
 - 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
-- 📽 Plex media server...
-  - Tautulli
-  - `plex-autoscan`
+- 📽 Plex Media Server
 - ☁️ rclone
 - 🗃 mergerFS
 - 📺 Sonarr
 - 🎬 Radarr
-- 🧲 qBittorrent...
-  - `qb-web` frontend
-  - `vue-torrent` frontend
-- ⏬ aria2...
-  - `ariaNg` frontend
+- 🧲 qBittorrent w/ [`qb-web`](https://github.com/CzBiX/qb-web)/[`vuetorrent`](https://github.com/WDaan/VueTorrent)
+- ⏬ aria2 w/ [`ariaNg`](https://github.com/mayswind/AriaNg)
 - 📂 File Browser
+- 📊 Tautulli
+- `plex-autoscan`
+
+---
 
 ### DNS Server
 
@@ -70,16 +70,16 @@ Runs:
 
 Runs:
 
-- 🌎 AdGuard Home...
-  - Unbound resolver
+- 🌎 AdGuard Home
+- 🌍 Unbound
 - 📱 Homebridge
-- Jackett
+- 🧩 Jackett
 - ✈️ Cockpit
 - 🏎 Librespeed
 
 ## File management
 
-Files are stored both locally and in the cloud.
+Files are stored both in the cloud and locally.
 
 ### mergerFS and rclone
 
@@ -100,7 +100,7 @@ That way all new files are created locally.
 /drive    <----|
 ```
 
-Everyday at 11PM, a script moves the local content to the cloud, depending upon their age.
+Everyday at 11AM, a cron job runs a script that moves the local content to the cloud, depending upon their age.
 
 ### Local storage
 
