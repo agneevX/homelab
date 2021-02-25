@@ -1,12 +1,12 @@
 [Unit]
-Description = mergerFS rclone-drive mount
-RequiresMountsFor = /mnt/drive
+Description = mergerFS rclone drive mount
+RequiresMountsFor = /mnt/drive /mnt/crypt
 
 [Mount]
-What = /opt/.drive:/mnt/drive
+What = /opt/.drive:/mnt/drive:/mnt/crypt
 Where = /drive
 Type = fuse.mergerfs
-Options = defaults,func.getattr=newest,dropcacheonclose=true,cache.files=auto-full,category.action=all,category.create=ff,allow_other,use_ino,fsname=rclone_drive
+Options = defaults,allow_other,use_ino,func.getattr=newest,dropcacheonclose=true,cache.files=auto-full,category.action=all,category.create=ff,fsname=drive-crypt
 
 [Install]
 WantedBy = multi-user.target

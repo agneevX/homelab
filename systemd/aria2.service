@@ -4,20 +4,28 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/aria2c \
+ExecStart=/usr/bin/aria2c -q \
         --no-conf=true \
-        --dir=/home/agneev/.temp \
+        --dir=/home/agneev/aria \
         --on-download-complete=/home/agneev/scripts/aria_post_dl.sh \
-        --max-connection-per-server=16 --split=16 \
-        --disk-cache=128M --file-allocation=falloc --enable-mmap \
-        --retry-wait=30 --max-tries=50 \
-        --save-session=/home/agneev/.aria2.session --save-session-interval=5 \
-        --input-file=/home/agneev/.aria2.session \
-        --enable-rpc --rpc-listen-all --rpc-allow-origin-all \
-        --bt-enable-lpd=true --disable-ipv6=true \
-        -q --log-level=warn
+        --max-concurrent-downloads=8 \
+        --max-connection-per-server=16 \
+        --split=16 \
+        --disk-cache=64M \
+        --file-allocation=falloc \
+        --enable-mmap \
+        --retry-wait=30 \
+        --max-tries=50 \
+        --save-session-interval=5 \
+        --save-session=/home/agneev/.config/.aria2.session \
+        --input-file=/home/agneev/.config/.aria2.session \
+        --enable-rpc \
+        --rpc-listen-all \
+        --rpc-allow-origin-all \
+        --bt-enable-lpd=true \
+        --disable-ipv6=true \
+        --log-level=warn
 User=agneev
 Group=agneev
 
 [Install]
-WantedBy=multi-user.target

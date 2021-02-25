@@ -1,12 +1,11 @@
 [Unit]
-Description = mergerFS mount
-RequiresMountsFor = /mnt/pool/*
+Description = mergerFS drive pool mount
 
 [Mount]
 What = /mnt/pool/*
 Where = /knox
 Type = fuse.mergerfs
-Options = defaults,dropcacheonclose=true,category.create=rand,allow_other,use_ino,fsname=mergerFS
+Options = defaults,allow_other,use_ino,cache.files=partial,category.create=pfrd,dropcacheonclose=true,fsname=pooled-drives
 
 [Install]
 WantedBy = multi-user.target

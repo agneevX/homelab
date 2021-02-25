@@ -1,178 +1,159 @@
 {
-    "bridge": {
-        "name": "Homebridge",
-        "username": "xxxxx",
-        "port": 51910,
-        "pin": "xxxxx"
-    },
-    "accessories": [],
-    "platforms": [
-        {
-            "name": "Config",
-            "port": 8581,
-            "auth": "none",
-            "theme": "amber",
-            "tempUnits": "c",
-            "lang": "en",
-            "sudo": true,
-            "sessionTimeout": 28800,
-            "log": {
-                "method": "native",
-                "path": "/var/lib/homebridge/homebridge.log"
-            },
-            "platform": "config"
-        },
-        {
-            "name": "Camera ffmpeg",
-            "cameras": [
-                {
-                    "name": "Front Gate",
-                    "manufacturer": "D-Link",
-                    "model": "DCS-933L",
-                    "firmwareRevision": "1.15.01",
-                    "motion": false,
-                    "unbridge": false,
-                    "videoConfig": {
-                        "source": "-re -f mjpeg -i http://admin:xxxxx@10.0.0.20/mjpeg.cgi",
-                        "stillImageSource": "-i http://admin:xxxxx@10.0.0.20/image/jpeg.cgi",
-                        "maxStreams": 4,
-                        "maxWidth": 0,
-                        "maxHeight": 0,
-                        "maxFPS": 0,
-                        "maxBitrate": 6000,
-                        "forceMax": true,
-                        "preserveRatio": true,
-                        "vcodec": "h264_omx",
-                        "encoderOptions": "-preset ultrafast -tune zerolatency",
-                        "audio": false,
-                        "debug": false
-                    }
-                }
-            ],
-            "platform": "Camera-ffmpeg"
-        },
-        {
-            "devices": [
-                {
-                    "name": "Bedroom TV",
-                    "ip": "10.0.0.60",
-                    "mac": "xxxxx",
-                    "pollingInterval": 10,
-                    "volumeLimit": 100,
-                    "volumeControl": "none",
-                    "channelControl": false,
-                    "ccRemoteRemap": {
-                        "information": "HOME"
-                    },
-                    "appButtons": [
-                        {
-                            "appId": "com.webos.app.hdmi1",
-                            "name": "HDMI 1"
-                        },
-                        {
-                            "appId": "com.webos.app.hdmi2",
-                            "name": "HDMI 2"
-                        },
-                        {
-                            "appId": "com.webos.app.externalinput.av1",
-                            "name": "Cable"
-                        },
-                        {
-                            "appId": "youtube.leanback.v4",
-                            "name": "YouTube"
-                        },
-                        {
-                            "appId": "netflix",
-                            "name": "Netflix"
-                        },
-                        {
-                            "appId": "cdp-30",
-                            "name": "Plex"
-                        },
-                        {
-                            "appId": "com.itkey.plexclient",
-                            "name": "XPlay"
-                        },
-                        {
-                            "appId": "amazon.global",
-                            "name": "Prime Video"
-                        }
-                    ]
-                },
-                {
-                    "name": "Old Room TV",
-                    "ip": "10.0.0.61",
-                    "mac": "xxxxx",
-                    "pollingInterval": 10,
-                    "volumeLimit": 100,
-                    "volumeControl": "none",
-                    "channelControl": false,
-                    "ccRemoteRemap": {
-                        "information": "HOME"
-                    },
-                    "appButtons": [
-                        {
-                            "appId": "youtube.leanback.v4",
-                            "name": "YouTube"
-                        },
-                        {
-                            "appId": "netflix",
-                            "name": "Netflix"
-                        },
-                        {
-                            "appId": "cdp-30",
-                            "name": "Plex"
-                        },
-                        {
-                            "appId": "com.itkey.plexclient",
-                            "name": "XPlay"
-                        },
-                        {
-                            "appId": "amazon",
-                            "name": "Prime Video"
-                        },
-                        {
-                            "appId": "com.apple.appletv",
-                            "name": " TV+"
-                        }
-                    ]
-                },
-                {
-                    "name": "New Room TV",
-                    "ip": "10.0.0.62",
-                    "mac": "xxxxx",
-                    "pollingInterval": 10,
-                    "volumeLimit": 100,
-                    "volumeControl": "none",
-                    "channelControl": false,
-                    "ccRemoteRemap": {
-                        "information": "HOME"
-                    },
-                    "appButtons": [
-                        {
-                            "appId": "youtube.leanback.v4",
-                            "name": "YouTube"
-                        },
-                        {
-                            "appId": "netflix",
-                            "name": "Netflix"
-                        },
-                        {
-                            "appId": "cdp-30",
-                            "name": "Plex"
-                        },
-                        {
-                            "appId": "com.itkey.plexclient",
-                            "name": "XPlay"
-                        },
-                        {
-                            "appId": "amazon.global",
-                            "name": "Prime Video"
-                        }
-                    ]
-                }
-            ],
-            "platform": "webostv"
-        }
-    ]
+	"bridge": {
+		"name": "Homebridge",
+		"port": 51293
+	},
+	"accessories": [],
+	"platforms": [
+		{
+			"name": "Homebridge",
+			"port": 8581,
+			"auth": "none",
+			"theme": "auto",
+			"tempUnits": "c",
+			"lang": "auto",
+			"platform": "config"
+		},
+		{
+			"name": "Camera ffmpeg",
+			"cameras": [
+				{
+					"name": "Front Gate",
+					"manufacturer": "D-Link",
+					"model": "DCS-933L",
+					"firmwareRevision": "1.15.01",
+					"motion": false,
+					"unbridge": false,
+					"videoConfig": {
+						"source": "-re -f mjpeg -i http://username:password@10.0.0.20/video.cgi",
+						"stillImageSource": "-i http://username:password@10.0.0.20/image/jpeg.cgi",
+						"maxStreams": 8,
+						"maxWidth": 0,
+						"maxHeight": 0,
+						"maxFPS": 0,
+						"maxBitrate": 5000,
+						"forceMax": true,
+						"preserveRatio": true,
+						"encoderOptions": "-preset ultrafast -tune zerolatency",
+						"audio": false
+					}
+				}
+			],
+			"platform": "Camera-ffmpeg"
+		},
+		{
+			"devices": [
+				{
+					"name": "Bedroom Television",
+					"ip": "10.0.0.60",
+					"pollingInterval": 10,
+					"volumeControl": "none",
+					"volumeLimit": 100,
+					"channelControl": false,
+					"infoButtonAction": "HOME",
+					"inputs": [
+						{
+							"appId": "com.webos.app.hdmi1",
+							"name": "HDMI 1"
+						},
+						{
+							"appId": "com.webos.app.hdmi2",
+							"name": "HDMI 2"
+						},
+						{
+							"appId": "com.webos.app.externalinput.av1",
+							"name": "Cable"
+						},
+						{
+							"appId": "youtube.leanback.v4",
+							"name": "YouTube"
+						},
+						{
+							"appId": "netflix",
+							"name": "Netflix"
+						},
+						{
+							"appId": "cdp-30",
+							"name": "Plex"
+						},
+						{
+							"appId": "com.itkey.plexclient",
+							"name": "XPlay"
+						},
+						{
+							"appId": "amazon.global",
+							"name": "Prime Video"
+						}
+					]
+				},
+				{
+					"name": "Old Room TV",
+					"ip": "10.0.0.61",
+					"pollingInterval": 10,
+					"volumeControl": "none",
+					"volumeLimit": 100,
+					"channelControl": false,
+					"infoButtonAction": "HOME",
+					"inputs": [
+						{
+							"appId": "youtube.leanback.v4",
+							"name": "YouTube"
+						},
+						{
+							"appId": "netflix",
+							"name": "Netflix"
+						},
+						{
+							"appId": "cdp-30",
+							"name": "Plex"
+						},
+						{
+							"appId": "com.itkey.plexclient",
+							"name": "XPlay"
+						},
+						{
+							"appId": "amazon",
+							"name": "Prime Video"
+						},
+						{
+							"appId": "com.apple.appletv",
+							"name": " TV+"
+						}
+					]
+				},
+				{
+					"name": "New Room TV",
+					"ip": "10.0.0.62",
+					"pollingInterval": 10,
+					"volumeControl": "none",
+					"volumeLimit": 100,
+					"channelControl": false,
+					"infoButtonAction": "HOME",
+					"inputs": [
+						{
+							"appId": "youtube.leanback.v4",
+							"name": "YouTube"
+						},
+						{
+							"appId": "netflix",
+							"name": "Netflix"
+						},
+						{
+							"appId": "cdp-30",
+							"name": "Plex"
+						},
+						{
+							"appId": "com.itkey.plexclient",
+							"name": "XPlay"
+						},
+						{
+							"appId": "amazon.global",
+							"name": "Prime Video"
+						}
+					]
+				}
+			],
+			"platform": "webostv"
+		}
+	]
 }
