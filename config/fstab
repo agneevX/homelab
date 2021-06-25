@@ -1,4 +1,0 @@
-UUID=xxxxx /mnt/pool/Seagate4T ext4 nofail,defaults 0 2
-UUID=xxxxx /mnt/pool/WD1T ext4 nofail,defaults 0 2
-UUID=xxxxx /mnt/pool/Seagate1T ext4 nofail,defaults 0 2
-UUID=xxxxx /mnt/pool/Sony1T ext4 nofail,defaults 0 2
