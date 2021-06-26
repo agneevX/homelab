@@ -1,34 +1,50 @@
 #!/bin/bash
 # shellcheck disable=SC2001
-if [[ $(pidof -x "$(basename "$0")" -o %PPID) ]]; then
-echo "Already running, exiting..."; exit 1; fi
+
+if [[ $(pidof -x "$(basename "$0")" -o %PPID) ]]; then echo "Already running!"; exit 1; fi
 now="$(date +'%d%m%S')"
+
+if [[ "$1" == "-d" ]]; then set -x
+else
+	HC_URL=https://hc-ping.com/
+	curl -fsS --retry 5 $HC_URL/start
+fi
+
 disk_usage="$(df --output=pcent / | awk -F '%' 'NR==2{print $1}')"
-disk_info=$(echo "---$disk_usage% SSD USAGE---" && printf "\n\n")
-OPTIMIZE_FLAGS=(--drive-chunk-size 64M --delete-empty-src-dirs --fast-list -v --stats-one-line --stats=5h)
-RCLONE_FLAGS=(--max-transfer=60G --order-by "modtime,ascending" --cutoff-mode=soft --transfers=1 --filter '- local/**' --filter '- .*' --exclude-from=/tmp/lo_exclude_"$now")
 
 if [[ $1 == '-f' ]] || [[ $1 == '--force' ]]; then
-  printf " + Force flag found, moving all files\n"
-  MIN_AGE=""
+	printf "Force flag found, moving all files\n"
 elif [[ $disk_usage -gt '90' ]]; then
-  MIN_AGE="--min-age=3d"
+	MIN_AGE="--min-age=2d"
 elif [[ $disk_usage -gt '80' ]] && [[ $disk_usage -lt '90' ]]; then
-  MIN_AGE="--min-age=5d"
-else MIN_AGE="--min-age=7d"; fi
+	MIN_AGE="--min-age=5d"
+else
+	MIN_AGE="--min-age=10d"
+fi
 
-if [[ $1 == '-fb' ]] || [[ $1 == '--force-bandwidth' ]]; then
-  printf " + Not enabling bandwidth limiter...\n"; BW_LIMIT=""
-else BW_LIMIT="--bwlimit=6M"; fi
+subtitles_move () {
+	rclone move -q /opt/.drive crypt: --include=*.srt --transfers=12 --filter '- local/**'
+}
 
-HC_URL=https://hc-ping.com/
-curl -fsS --retry 5 $HC_URL/start
+files_move () {
+	rclone move ${MIN_AGE:+"$MIN_AGE"} ${BW_LIMIT:+"$BW_LIMIT"} \
+	/opt/.drive crypt: \
+	--filter '- .*' \
+	--drive-chunk-size 64M \
+	--delete-empty-src-dirs \
+	--transfers=2 \
+	--order-by "modtime,ascending" \
+	--filter '- local/**' \
+	--exclude-from=/tmp/exclude_"$now" \
+	-v --stats-one-line --stats=6h 
+}
 
-find /opt/.drive/ -type f -links +1 -printf "/%P\n" > /tmp/lo_exclude_"$now"
+subtitles_move &
 
-o=$(echo "$disk_info" && rclone move "$MIN_AGE" "$BW_LIMIT" /opt/.drive crypt: "${RCLONE_FLAGS[@]}" "${OPTIMIZE_FLAGS[@]}" 2>&1)
+find /opt/.drive/ -type f -links +1 -printf "/%P\n" > /tmp/exclude_"$now"
+MOVE=$(files_move 2>&1)
 exit_status=$?
-o="$(echo "$o" | sed 's/\&/%26/g')" && o="$(echo "$o" | sed 's/\@/%40/g')"
 
-if [[ $exit_status == '8' ]]; then exit_status='0'; fi
-curl -fsS -m 10 --retry 5 --data-raw "$o" $HC_URL/$exit_status
+body="$(echo -e "--- $disk_usage% SSD use ---\n$MOVE")"
+
+curl -fsS -m 10 --retry 5 $HC_URL/$exit_status --data-raw "$body"
