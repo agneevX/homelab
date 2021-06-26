@@ -1,0 +1,18 @@
+[Unit]
+Description=mergerFS external drives mount
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/mergerfs \
+	/mnt/pool/* /knox \
+	-o defaults \
+	-o allow_other \
+	-o use_ino \
+	-o cache.files=partial \
+	-o category.create=pfrd \
+	-o dropcacheonclose=true \
+	-o fsname=mergerFS
+ExecStop=/bin/fusermount -uz /knox
+
+[Install]
+WantedBy=multi-user.target

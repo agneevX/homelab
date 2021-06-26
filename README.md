@@ -41,7 +41,7 @@ I run two Raspberry Pi 4s' as servers currently.
 - 🔊 3.5mm out...
   - Fenda E200 Plus
 
-Runs:
+Runs (mostly in Docker):
 
 - 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
 - 📽 Plex Media Server
@@ -49,11 +49,10 @@ Runs:
 - 🗃 mergerFS
 - 📺 Sonarr
 - 🎬 Radarr
-- 🧲 qBittorrent w/ [`qb-web`](https://github.com/CzBiX/qb-web)/[`vuetorrent`](https://github.com/WDaan/VueTorrent)
-- ⏬ aria2 w/ [`ariaNg`](https://github.com/mayswind/AriaNg)
-- 📂 File Browser
+- 🧲 qBittorrent
 - 📊 Tautulli
-- `plex-autoscan`
+
+More in [`docker_compose.yml`](./docker-compose.yml).
 
 ---
 
@@ -68,14 +67,11 @@ Runs:
 - 📼 32GB microSD card
 - 🌐 Gigabit Ethernet
 
-Runs:
+Runs (mostly in Docker):
 
 - 🌎 AdGuard Home
 - 🌍 Unbound
 - 📱 Homebridge
-- 🧩 Jackett
-- ✈️ Cockpit
-- 🏎 Librespeed
 
 ## File management
 
@@ -85,22 +81,22 @@ Files are stored both in the cloud and locally.
 
 rclone is the tool that's used to communicate with various cloud storages.
 
-During system startup, two systemd files mount cloud drives to [`/mnt/drive`](./systemd/drive.service) and [`/mnt/crypt`](./systemd/crypt.service). This process also caches the entire file structure in-memory.
+During system startup, two systemd files mount cloud drives to [`/mnt/drive`](./systemd/rclone-drive.service) and [`/mnt/crypt`](./systemd/rclone-crypt.service). This process also caches the entire file structure in-memory.
 
-Another systemd file calls mergerFS to create a mount at [`/drive`](./systemd/drive.mount) that combines the above two mount points and another local folder at `/opt/.drive`.
+Another systemd file calls mergerFS to create a mount at [`/drive`](./systemd/mfs-drive.service) that combines the above two mount points and another local folder.
 
 That way all new files are created locally.
 
 ```bash
-/opt # SSD cache
-.../.drive  ---|
+# SSD cache
+/opt/.drive ->-|
 /mnt           |
-.../drive  ----|
-.../crypt  ----|
+../*drive -->--|
+../*crypt -->--|
 /drive    <----|
 ```
 
-Everyday at 11AM, a cron job runs a script that moves the local content to the cloud, depending upon their age.
+Everyday at 1PM, a cron job runs a script that moves the local content to the cloud, depending upon their age.
 
 ### Local storage
 
