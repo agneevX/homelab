@@ -1,0 +1,409 @@
+version: "3.8"
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-file: "5"
+    max-size: "10m"
+
+volumes:
+  netdata_lib:
+  netdata_cache:
+
+services:
+
+  netdata:
+    image: netdata/netdata:stable
+    container_name: netdata
+    hostname: falcon
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - 10.0.0.11:19999:19999
+    healthcheck:
+      test: "/usr/sbin/health.sh > /dev/null 2>&1"
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    volumes:
+      # Configuration
+      - /opt/appdata/netdata:/etc/netdata
+      - netdata_lib:/var/lib/netdata
+      - netdata_cache:/var/cache/netdata
+      # System access 
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      
+  yacht:
+    container_name: yacht
+    image: selfhostedpro/yacht:devel
+    logging: *default-logging
+    restart: unless-stopped
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - SECRET_KEY=key
+      - DISABLE_AUTH=True
+    volumes:
+      - /opt/appdata/yacht:/config
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      
+  scrutiny:
+    container_name: scrutiny
+    image: hotio/scrutiny
+    logging: 
+      driver: none
+    cap_add:
+      - SYS_RAWIO
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+      - INTERVAL=21600
+      - MODE=both
+    volumes:
+      - /run/udev:/run/udev:ro
+      - /opt/appdata/scrutiny:/config
+    devices:
+      - /dev/sda:/dev/sda:ro
+      - /dev/sdb:/dev/sdb:ro
+      - /dev/sdc:/dev/sdc:ro
+      - /dev/sdd:/dev/sdd:ro
+      - /dev/sde:/dev/sde:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      
+#  node-red:
+#    container_name: node-red
+#    image: nodered/node-red
+#    logging: *default-logging
+#    restart: unless-stopped
+#    user: "1001:1001"
+#    environment:
+#      - TZ=Asia/Kolkata
+#    volumes:
+#      - /opt/appdata/nodered:/data
+#    labels:
+#      - "org.hotio.pullio.update=true"
+#      - "org.hotio.pullio.notify=true"
+#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  code-server:
+    container_name: code-server
+    image: linuxserver/code-server
+    logging: *default-logging
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8443", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/code-server:/config
+      # Project folders
+      - /home/agneev/scripts:/config/workspace/scripts
+      - /home/agneev/git:/config/workspace/github
+      - /home/agneev/docker:/config/workspace/docker
+      - /opt/appdata/home-assistant:/config/workspace/home-assistant
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  nginxproxymanager:
+    container_name: nginxproxymanager
+    image: jc21/nginx-proxy-manager
+    logging: *default-logging
+    restart: unless-stopped
+    ports:
+      - 80:80
+    environment:
+      DB_SQLITE_FILE: "/data/npm_db.sqlite"
+      DISABLE_IPV6: 'true'
+    volumes:
+      - /opt/appdata/nginx-proxy-manager/data:/data
+      - /opt/appdata/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  mealie:
+    container_name: mealie
+    image: hkotel/mealie
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/mealie:/app/data
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  home-assistant:
+    container_name: home-assistant
+    image: homeassistant/home-assistant
+    restart: unless-stopped
+    logging: *default-logging
+    network_mode: host
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8123", "-fso", "/dev/null"]
+    volumes:
+      - /opt/appdata/home-assistant:/config
+      - /etc/localtime:/etc/localtime:ro
+      # MariaDB database
+      - /run/mysqld/mysqld.sock:/run/mysqld/mysqld.sock
+      # System sensors
+      - /home/agneev/.homeassistant:/ssd:ro
+      - /knox/.homeassistant:/knox:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  qbittorrent:
+    container_name: qbittorrent
+    image: hotio/qflood
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - 8100:8080
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/qbittorrent:/config
+      # Storage locations
+      - /drive/local/qbt:/drive/local/qbt
+      - /knox:/knox
+      # Custom Web UI
+      # - /opt/apps/qb-web:/app/qb-web:ro
+      # Scripting
+      - type: bind
+        source: /home/agneev/scripts/qbt_post_dl.sh
+        target: /scripts/qbt_post_dl.sh
+        read_only: true
+      # To get internal storage quota info
+      - /home/agneev/.homeassistant:/SSD:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  plexmediaserver:
+    container_name: plexmediaserver
+    image: hotio/plex
+    restart: unless-stopped
+    logging: *default-logging
+    network_mode: host
+    healthcheck:
+      test: ["CMD", "curl", "localhost:32400/identity", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+      - PLEX_PASS=no
+    volumes:
+      - /opt/appdata/plexmediaserver:/config
+      - type: tmpfs
+        target: /transcode
+        tmpfs:
+          size: 2gb
+      # Media storage locations
+      - /drive:/drive:ro
+      - /knox:/knox:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  tautulli:
+    container_name: tautulli
+    image: hotio/tautulli
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8181", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/tautulli:/config
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  overseerr:
+    container_name: overseerr
+    image: hotio/overseerr
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "localhost:5055", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+      - LOG_LEVEL=warning
+    volumes:
+      - /opt/appdata/overseerr:/config
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  radarr:
+    container_name: radarr
+    image: hotio/radarr:nightly
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "localhost:7878", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/radarr:/config
+      - /drive:/drive
+      - /knox:/knox
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  radarr4k:
+    container_name: radarr4k
+    image: hotio/radarr:nightly
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "localhost:7878", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/radarr4k:/config
+      - /drive:/drive
+      - /knox:/knox
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  sonarr:
+    container_name: sonarr
+    image: hotio/sonarr:nightly
+    restart: unless-stopped
+    logging: *default-logging 
+    ports:
+      - 127.0.0.1:8989:8989
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8989", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/sonarr:/config
+      - /drive:/drive
+      - /knox:/knox
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  bazarr:
+    container_name: bazarr
+    image: hotio/bazarr
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "localhost:6767", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/bazarr:/config
+      - /drive:/drive
+      - /knox:/knox
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  prowlarr:
+    container_name: prowlarr
+    image: hotio/prowlarr:nightly
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "localhost:9696", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/prowlarr:/config
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  jackett:
+    container_name: jackett
+    image: hotio/jackett
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "localhost:9117", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/jackett:/config
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
