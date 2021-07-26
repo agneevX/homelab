@@ -179,7 +179,7 @@ services:
       - /run/mysqld/mysqld.sock:/run/mysqld/mysqld.sock
       # System sensors
       - /home/agneev/.homeassistant:/ssd:ro
-      - /knox/.homeassistant:/knox:ro
+      - /mnt/knox/.homeassistant:/knox:ro
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -202,8 +202,8 @@ services:
     volumes:
       - /opt/appdata/qbittorrent:/config
       # Storage locations
-      - /drive/local/qbt:/drive/local/qbt
-      - /knox:/knox
+      - /mnt/mfs-drive/local/qbt:/drive/local/qbt
+      - /mnt/knox:/knox
       # Custom Web UI
       # - /opt/apps/qb-web:/app/qb-web:ro
       # Scripting
@@ -237,10 +237,10 @@ services:
       - type: tmpfs
         target: /transcode
         tmpfs:
-          size: 2gb
+          size: 1gb
       # Media storage locations
-      - /drive:/drive:ro
-      - /knox:/knox:ro
+      - /mnt/mfs-plexdrive:/drive:ro
+      - /mnt/knox:/knox:ro
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -298,8 +298,8 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/radarr:/config
-      - /drive:/drive
-      - /knox:/knox
+      - /mnt/mfs-drive:/drive
+      - /mnt/knox:/knox
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -319,8 +319,8 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/radarr4k:/config
-      - /drive:/drive
-      - /knox:/knox
+      - /mnt/mfs-drive:/drive
+      - /mnt/knox:/knox
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -342,8 +342,8 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/sonarr:/config
-      - /drive:/drive
-      - /knox:/knox
+      - /mnt/mfs-drive:/drive
+      - /mnt/knox:/knox
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -363,8 +363,8 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/bazarr:/config
-      - /drive:/drive
-      - /knox:/knox
+      - /mnt/mfs-drive:/drive
+      - /mnt/knox:/knox
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -389,21 +389,21 @@ services:
       - "org.hotio.pullio.notify=true"
       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
-  jackett:
-    container_name: jackett
-    image: hotio/jackett
-    restart: unless-stopped
-    logging: *default-logging
-    healthcheck:
-      test: ["CMD", "curl", "localhost:9117", "-fso", "/dev/null"]
-    environment:
-      - PUID=1001
-      - PGID=1001
-      - UMASK=002
-      - TZ=Asia/Kolkata
-    volumes:
-      - /opt/appdata/jackett:/config
-    labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+#   jackett:
+#     container_name: jackett
+#     image: hotio/jackett
+#     restart: unless-stopped
+#     logging: *default-logging
+#     healthcheck:
+#       test: ["CMD", "curl", "localhost:9117", "-fso", "/dev/null"]
+#     environment:
+#       - PUID=1001
+#       - PGID=1001
+#       - UMASK=002
+#       - TZ=Asia/Kolkata
+#     volumes:
+#       - /opt/appdata/jackett:/config
+#     labels:
+#       - "org.hotio.pullio.update=true"
+#       - "org.hotio.pullio.notify=true"
+#       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"

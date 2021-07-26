@@ -11,24 +11,38 @@ volumes:
   netdata_cache:
 
 services:
-  bind:
-    container_name: bind
-    image: eafxx/bind
-    hostname: bind
+
+  homer:
+    image: b4bz/homer
+    container_name: homer
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/homer:/www/assets
+    environment:
+      - UID=1001
+      - GID=1001
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  nginxproxymanager:
+    container_name: nginxproxymanager
+    image: jc21/nginx-proxy-manager
     restart: unless-stopped
     ports:
-      - 127.0.0.1:5300:53
-      - 127.0.0.1:5301:53/udp
-      - 10.0.0.10:9200:10000
-    volumes:
-      - /opt/appdata/bind:/data
+      - 10.0.0.10:80:80
+      - 10.0.0.10:9000-9010:9000-9010
     environment:
-      - WEBMIN_ENABLED=true
-      - WEBMIN_INIT_SSL_ENABLED=false
-      - WEBMIN_INIT_REFERERS=dns.svr2
-      - WEBMIN_INIT_REDIRECT_PORT=10000
-      - ROOT_PASSWORD=password
-      - TZ=Asia/Kolkata
+      DB_SQLITE_FILE: "/data/npm_db.sqlite"
+      DISABLE_IPV6: 'true'
+    volumes:
+      - /opt/appdata/nginx-proxy-manager/data:/data
+      - /opt/appdata/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
   netdata:
     image: netdata/netdata:stable
@@ -69,8 +83,6 @@ services:
 #    image: selfhostedpro/yacht:devel
 #    logging: *default-logging
 #    restart: unless-stopped
-#    ports:
-#      - 127.0.0.1:8001:8000
 #    environment:
 #      - PUID=1001
 #      - PGID=1001
@@ -130,8 +142,6 @@ services:
     container_name: heimdall
     restart: unless-stopped
     logging: *default-logging
-    ports:
-      - 10.0.0.10:1100:80
     healthcheck:
       test: ["CMD", "curl", "localhost", "-fso", "/dev/null"]
     environment:
@@ -150,8 +160,6 @@ services:
     image: hotio/qflood
     logging: *default-logging
     restart: unless-stopped
-    ports:
-      - 127.0.0.1:4000:3000
     healthcheck:
       test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
     environment:
@@ -178,8 +186,6 @@ services:
 #       driver: none
 #     volumes:
 #       - /opt/appdata/statping:/app
-#     ports:
-#       - 8300:8080
 #    healthcheck:
 #      test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
 #    labels:
@@ -226,8 +232,6 @@ services:
     image: portainer/portainer-ce
     container_name: portainer
     restart: always
-    ports: 
-      - 10.0.0.10:9000:9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/appdata/portainer_data:/data
@@ -235,5 +239,3 @@ services:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-  
-  
