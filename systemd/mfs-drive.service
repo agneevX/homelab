@@ -4,7 +4,8 @@ Description=mergerFS rclone drive-crypt mount
 [Service]
 Type=forking
 ExecStart=/usr/bin/mergerfs \
-	/opt/.drive:/mnt/drive:/mnt/crypt* /drive \
+	/opt/.drive:/mnt/rc-drive:/mnt/rc-crypt* \
+	/mnt/mfs-drive \
 	-o defaults \
 	-o allow_other \
 	-o use_ino \
@@ -14,7 +15,7 @@ ExecStart=/usr/bin/mergerfs \
 	-o category.action=all \
 	-o category.create=ff \
 	-o fsname=mfs-drive
-ExecStop=/bin/fusermount -uz /drive
+ExecStop=/bin/fusermount -uz /mnt/mfs-drive
 
 [Install]
 WantedBy=multi-user.target

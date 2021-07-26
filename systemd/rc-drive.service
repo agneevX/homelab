@@ -1,30 +1,28 @@
 [Unit]
-Description=rclone crypt daemon
+Description=rclone drive daemon
 After=network-online.target
 
 [Service]
 Type=notify
 Environment=RCLONE_UMASK=002
 Environment=RCLONE_ALLOW_OTHER=true
-Environment=RCLONE_POLL_INTERVAL=10s
 Environment=RCLONE_DIR_CACHE_TIME=1000h
+Environment=RCLONE_POLL_INTERVAL=10s
 Environment=RCLONE_USE_MMAP=true
-
-Environment=RCLONE_BUFFER_SIZE=256M
+Environment=RCLONE_EXCLUDE=crypt/**
 
 Environment=RCLONE_LOG_LEVEL=NOTICE
-Environment=RCLONE_RC_ADDR=127.0.0.1:5801
+Environment=RCLONE_RC_ADDR="127.0.0.1:5800"
 
-ExecStart=/usr/bin/rclone mount crypt: /mnt/crypt --rc
+ExecStart=/usr/bin/rclone mount drive: /mnt/drive --rc
 ExecStartPost=/usr/bin/rclone rc vfs/refresh recursive=true _async=true --rc-addr ${RCLONE_RC_ADDR}
-ExecStop=/bin/fusermount -uz /mnt/crypt
+ExecStop=/bin/fusermount -uz /mnt/drive
 
 Restart=on-failure
 RestartSec=20
-
 User=agneev
 Group=agneev
-SyslogIdentifier=rc-crypt
+SyslogIdentifier=rc-drive
 
 [Install]
 WantedBy=multi-user.target
