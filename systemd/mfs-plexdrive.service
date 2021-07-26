@@ -1,0 +1,23 @@
+[Unit]
+Description=mergerFS plexdrive-drive rclonecrypt mount
+
+[Service]
+Type=forking
+
+ExecStart=/usr/bin/mergerfs \
+	/opt/.drive:/mnt/pd-drive:/mnt/pd-crypt:/mnt/rc-crypt2 \
+	/mnt/mfs-plexdrive \
+	-o defaults \
+	-o allow_other \
+	-o use_ino \
+	-o func.getattr=newest \
+	-o dropcacheonclose=true \
+	-o cache.files=auto-full \
+	-o category.create=ff \
+	-o category.action=all \
+	-o fsname=plexdrive
+
+ExecStop=/bin/fusermount -uz /mnt/mfs-plexdrive
+
+[Install]
+WantedBy=multi-user.target

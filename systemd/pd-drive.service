@@ -1,0 +1,26 @@
+[Unit]
+Description=plexdrive drive daemon
+After=network-online.target
+
+[Service]
+ExecStart=/opt/apps/plexdrive/plexdrive mount \
+	--config=/home/agneev/.config/plexdrive \
+	--cache-file=/home/agneev/.config/plexdrive/cache.bolt \
+	--drive-id=xxxxx \
+	--chunk-check-threads=4 \
+	--chunk-load-ahead=14 \
+	--max-chunks=16 \
+	--chunk-load-threads=4 \
+	--refresh-interval=10s \
+	--fuse-options=allow_other \
+	--verbosity=2 \
+	/mnt/pd-drive
+ExecStop=/bin/fusermount -uz /mnt/pd-drive
+
+Restart=on-abort
+User=agneev
+Group=agneev
+SyslogIdentifier=pd-drive
+
+[Install]
+WantedBy=multi-user.target
