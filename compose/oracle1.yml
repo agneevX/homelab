@@ -1,0 +1,228 @@
+version: '3.8'
+
+services:
+
+  prowlarr:
+    container_name: prowlarr
+    image: hotio/prowlarr:nightly
+    restart: unless-stopped
+    ports:
+      - 9696:9696
+    healthcheck:
+      test: ["CMD", "curl", "localhost:9696", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/prowlarr:/config
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  sonarr2:
+    container_name: sonarr2
+    image: hotio/sonarr:nightly
+    restart: unless-stopped
+    ports:
+      - 8989:8989
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8989", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/sonarr:/config
+      - /mnt/mfs-drive:/drive
+     
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  socks5-proxy:
+    image: serjs/go-socks5-proxy
+    container_name: socks5-proxy
+    restart: unless-stopped
+    ports:
+      - 32060:1080
+    environment:
+      - TZ=Asia/Kolkata
+      - PROXY_USER=agneev
+      - PROXY_PASSWORD=xdsgah_.bnAh3RqjLoK@
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  overseerr:
+    container_name: overseerr
+    image: hotio/overseerr
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "localhost:5055", "-fso", "/dev/null"]
+    ports:
+      - 5055:5055
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+      - LOG_LEVEL=warning
+    volumes:
+      - /opt/appdata/overseerr:/config
+    extra_hosts:
+      - radarr.server:100.120.109.59
+      - radarr4k.server:100.120.109.59
+      - sonarr.server:100.120.109.59
+      - plex.server:100.120.109.59
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  bazarr:
+    container_name: bazarr
+    image: hotio/bazarr
+    restart: unless-stopped
+    ports:
+      - 6767:6767
+    healthcheck:
+      test: ["CMD", "curl", "localhost:6767", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/bazarr:/config
+      - /mnt/mfs-drive:/drive
+    extra_hosts:
+      - radarr.server:100.120.109.59
+      - sonarr.server:100.120.109.59
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+#  traefik:
+#    image: traefik
+#    container_name: traefik
+#    restart: unless-stopped
+#    command: --api.insecure=true --providers.docker
+#    ports:
+#      - 90:80
+#      # The Web UI (enabled by --api.insecure=true)
+#      - 8080:8080
+#    volumes:
+#      - /opt/appdata/traefik:/etc/traefik
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    labels:
+#      - "org.hotio.pullio.update=true"
+#      - "org.hotio.pullio.notify=true"
+#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+#  jackett:
+#    container_name: jackett
+#    image: hotio/jackett
+#    restart: unless-stopped
+#    ports:
+#      - 9117:9117
+#    healthcheck:
+#      test: ["CMD", "curl", "localhost:9117", "-fso", "/dev/null"]
+#    environment:
+#      - PUID=1001
+#      - PGID=1001
+#      - UMASK=002
+#      - TZ=Asia/Kolkata
+#    volumes:
+#      - /opt/appdata/jackett:/config
+#    labels:
+#      - "org.hotio.pullio.update=true"
+#      - "org.hotio.pullio.notify=true"
+#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  nginxproxymanager:
+    container_name: nginxproxymanager
+    image: jc21/nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 81:81
+      - 443:443
+    environment:
+      DB_SQLITE_FILE: "/data/npm_db.sqlite"
+    volumes:
+      - /opt/appdata/nginx-proxy-manager/data:/data
+      - /opt/appdata/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  qbittorrent:
+    container_name: qbittorrent
+    image: hotio/qflood
+    restart: unless-stopped
+    ports:
+      - 8100:8080
+      - 8101:3000
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - UMASK=002
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/qbittorrent:/config
+      # Storage locations
+      - /home/ubuntu/drive-local/local/qbt:/drive/local/qbt
+      # Scripting
+      - type: bind
+        source: /home/ubuntu/scripts/qbt.sh
+        target: /scripts/qbt.sh
+        read_only: true
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  nextcloud:
+    image: nextcloud
+    container_name: nextcloud
+    restart: unless-stopped
+    ports:
+      - 2100:80
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - TZ=Asia/Kolkata
+      - "NEXTCLOUD_TRUSTED_DOMAINS=oc1-agneev.duckdns.org oracle1"
+      - "TRUSTED_PROXIES=oc1-agneev.duckdns.org oracle1"
+    volumes:
+#      - /opt/appdata/nextcloud/config:/config
+#      - /opt/appdata/nextcloud/data:/data
+      - /opt/appdata/nextcloud:/var/www/html
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  kitana:
+    container_name: kitana
+    image: pannal/kitana
+    restart: unless-stopped
+    ports:
+      - 31337:31337
+    volumes:
+      - /opt/appdata/kitana:/app/data
+    command: "--global-token xxxxx -a true --plugin-identifier com.plexapp.plugins.trakttv"
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
