@@ -4,7 +4,7 @@ Description=mergerFS rclone drive-crypt mount
 [Service]
 Type=forking
 ExecStart=/usr/bin/mergerfs \
-	/opt/.drive:/mnt/rc-drive:/mnt/rc-crypt* \
+	/opt/.drive:/mnt/rc-drive:/mnt/rc-crypt*:/mnt/nfs-oracle1 \
 	/mnt/mfs-drive \
 	-o defaults \
 	-o allow_other \
