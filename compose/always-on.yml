@@ -7,8 +7,9 @@ volumes:
     name: netdata-cache
 
 networks:
+
   default:
-    name: net1
+    name: network1
     ipam:
       config:
         - subnet: 172.18.0.0/16
@@ -102,6 +103,9 @@ services:
     image: spx01/blocky
     container_name: blocky
     restart: unless-stopped
+    user: "1001:1001"
+    healthcheck:
+      test: ["CMD", "dig", "@127.0.0.1", "-p", "1200", "healthcheck.blocky"]
     environment:
       - TZ=Asia/Kolkata
     volumes:
@@ -114,7 +118,7 @@ services:
       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
     networks:
       dns:
-        ipv4_address: 172.19.0.255
+        ipv4_address: 172.19.0.254
 
   homer:
     image: b4bz/homer
@@ -154,6 +158,38 @@ services:
         target: /var/cache
         tmpfs:
           size: 64mb
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    hostname: always-on
+    restart: unless-stopped
+    logging:
+      driver: none
+    ports:
+      - 19999:19999
+    healthcheck:
+      test: "/usr/sbin/health.sh > /dev/null 2>&1"
+      interval: 60s
+      timeout: 10s
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /opt/appdata/netdata:/etc/netdata
+      - netdata-lib:/var/lib/netdata
+      - netdata-cache:/var/cache/netdata
+      # System access 
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -269,7 +305,7 @@ services:
       - 9000:9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/appdata/portainer_data:/data
+      - /opt/appdata/portainer:/data
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"

@@ -1,10 +1,10 @@
 [Unit]
-Description=mergerFS rclone drive-crypt mount
+Description = mergerFS rclone drive-crypt mount
 
 [Service]
-Type=forking
+Type = forking
 ExecStart=/usr/bin/mergerfs \
-	/opt/.drive:/mnt/rc-drive:/mnt/rc-crypt*:/mnt/nfs-oracle1 \
+	/home/agneev/drive-local:/mnt/rc-drive:/mnt/rc-crypt:/mnt/oc1-drive \
 	/mnt/mfs-drive \
 	-o defaults \
 	-o allow_other \
@@ -15,7 +15,8 @@ ExecStart=/usr/bin/mergerfs \
 	-o category.action=all \
 	-o category.create=ff \
 	-o fsname=mfs-drive
-ExecStop=/bin/fusermount -uz /mnt/mfs-drive
+
+ExecStop = /bin/fusermount -uz /mnt/mfs-drive
 
 [Install]
-WantedBy=multi-user.target
+WantedBy = multi-user.target

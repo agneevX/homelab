@@ -16,6 +16,82 @@ networks:
 
 services:
 
+#   photoprism:
+#     container_name: photoprism
+#     image: photoprism/photoprism
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "curl", "localhost:2342", "-so", "/dev/null"]
+#     security_opt:
+#       - seccomp:unconfined
+#       - apparmor:unconfined
+#     working_dir: "/photoprism"
+#     volumes:
+#       - /opt/appdata/photoprism:/photoprism/storage
+#       - /mnt/knox/photos:/photoprism/originals
+#     environment:
+#       PHOTOPRISM_UID: 1001
+#       PHOTOPRISM_GID: 1001
+#       PHOTOPRISM_READONLY: "false"
+#       PHOTOPRISM_PUBLIC: "true"
+#       PHOTOPRISM_EXPERIMENTAL: "false"
+#       PHOTOPRISM_HTTP_HOST: "0.0.0.0"
+#       PHOTOPRISM_HTTP_PORT: 2342
+#       PHOTOPRISM_HTTP_COMPRESSION: "none"     # Improves transfer speed and bandwidth utilization (none or gzip)
+#       PHOTOPRISM_DATABASE_DRIVER: "sqlite"
+#       PHOTOPRISM_DARKTABLE_PRESETS: "false"   # Enables Darktable presets and disables concurrent RAW conversion
+#       PHOTOPRISM_THUMB_FILTER: "lanczos"      # Resample filter, best to worst: blackman, lanczos, cubic, linear
+#       PHOTOPRISM_THUMB_UNCACHED: "true"       # Enables on-demand thumbnail rendering (high memory and cpu usage)
+#       PHOTOPRISM_THUMB_SIZE: 2048             # Pre-rendered thumbnail size limit (default 2048, min 720, max 7680)
+#       # PHOTOPRISM_THUMB_SIZE: 4096           # Retina 4K, DCI 4K (requires more storage); 7680 for 8K Ultra HD
+#       PHOTOPRISM_THUMB_SIZE_UNCACHED: 7680    # On-demand rendering size limit (default 7680, min 720, max 7680)
+#       PHOTOPRISM_JPEG_SIZE: 7680              # Size limit for converted image files in pixels (720-30000)
+#       PHOTOPRISM_JPEG_QUALITY: 92             # Set to 95 for high-quality thumbnails (25-100)
+#       TF_CPP_MIN_LOG_LEVEL: 0                 # Show TensorFlow log messages for development
+#     labels:
+#       - "org.hotio.pullio.update=true"
+#       - "org.hotio.pullio.notify=true"
+#       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  archivebox:
+    container_name: archivebox
+    image: archivebox/archivebox:master
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8000/admin/login", "-so", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - TZ=Asia/Kolkata
+      - MEDIA_MAX_SIZE=750m
+    volumes:
+      - /opt/appdata/archivebox:/data
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  autoscan:
+    container_name: autoscan
+    image: hotio/autoscan
+    restart: unless-stopped
+    ports:
+      - 100.120.109.59:3030:3030
+    healthcheck:
+      test: ["CMD", "curl", "localhost:3030", "-so", "/dev/null"]
+    environment:
+      - PGID=1001
+      - PUID=1001
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/autoscan:/config
+      - /mnt/mfs-drive:/drive
+      - /mnt/knox:/knox:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
   plextraktsync:
     container_name: plextraktsync
     image: ghcr.io/taxel/plextraktsync
@@ -24,6 +100,10 @@ services:
     command: "watch"
     healthcheck:
       test: ["CMD", "wget", "-nv", "-t1", "--spider", "10.0.0.11:32400/identity"]
+    logging: 
+      driver: none
+    environment:
+      - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/plextraktsync:/app/config
     labels:
@@ -75,14 +155,15 @@ services:
     container_name: filebrowser
     restart: unless-stopped
     user: "1001:1001"
+    command:
+      - "--disable-exec"
+      - "--disable-type-detection-by-header"
+      - "--disable-preview-resize"
+      - "--disable-thumbnails"
     environment:
       - FB_ROOT=/files
       - FB_CONFIG=/srv/config.json
       - FB_DATABASE=/srv/filebrowser.db
-      - FB_DISABLE-EXEC=true
-      - FB_DISABLE-TYPE-DETECTION-BY-HEADER=true
-      - FB_DISABLE-PREVIEW-RESIZE=true
-      - FB_DISABLE-THUMBNAILS=true
     volumes:
       - /opt/appdata/filebrowser:/srv
       - /opt/appdata:/files/appdata
@@ -147,7 +228,9 @@ services:
     container_name: prometheus
     restart: unless-stopped
     user: "1001:1001"
-    command: "--log.level=warn --config.file=/etc/prometheus/prometheus.yml"
+    command: 
+      - "--log.level=warn"
+      - "--config.file=/etc/prometheus/prometheus.yml"
     healthcheck:
       test: ["CMD", "wget", "-nv", "-t1", "--spider", "localhost:9090"]
     volumes:
@@ -206,7 +289,7 @@ services:
       interval: 60s
       timeout: 10s
     volumes:
-      - /opt/appdata/netdata/config:/etc/netdata
+      - /opt/appdata/netdata:/etc/netdata
       - netdata-lib:/var/lib/netdata
       - netdata-cache:/var/cache/netdata
       # System access 
@@ -255,7 +338,6 @@ services:
       - PGID=1001
       - TZ=Asia/Kolkata
       - INTERVAL=10800
-      - MODE=both
     volumes:
       - /run/udev:/run/udev:ro
       - /opt/appdata/scrutiny:/config
@@ -297,10 +379,7 @@ services:
 #     volumes:
 #       - /opt/appdata/code-server:/config
 #       # Project folders
-#       - /home/agneev/scripts:/config/workspace/scripts
-#       - /home/agneev/git:/config/workspace/github
 #       - /home/agneev:/config/workspace/home
-#       - /opt/appdata/home-assistant:/config/workspace/home-assistant
 #     labels:
 #       - "org.hotio.pullio.update=true"
 #       - "org.hotio.pullio.notify=true"
@@ -334,6 +413,9 @@ services:
     network_mode: host
     healthcheck:
       test: ["CMD", "curl", "localhost:8123", "-fso", "/dev/null"]
+    environment:
+      - PUID=1001
+      - PGID=1001
     volumes:
       - /opt/appdata/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
@@ -358,7 +440,7 @@ services:
     volumes:
       - /opt/appdata/qbittorrent:/config
       # Download directories
-      - /opt/.drive/local/qbt:/drive/local/qbt
+      - /home/agneev/drive-local/local/qbt:/drive/local/qbt
       - /mnt/knox:/knox
       # Post download script
       - type: bind
@@ -381,6 +463,8 @@ services:
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
+    depends_on:
+      - tautulli
     volumes:
       - /opt/appdata/plex:/config
       - type: tmpfs
@@ -401,11 +485,14 @@ services:
     healthcheck:
       test: ["CMD", "curl", "localhost:8181", "-fso", "/dev/null"]
     environment:
+      - TP_HOTIO=true
+      - TP_THEME=plex
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/tautulli:/config
+      - /opt/theme-park/tautulli:/etc/cont-init.d/99-themepark
       - /opt/appdata/plex/Logs:/plex-logs:ro
     labels:
       - "org.hotio.pullio.update=true"
@@ -419,13 +506,16 @@ services:
     healthcheck:
       test: ["CMD", "curl", "localhost:7878", "-fso", "/dev/null"]
     ports:
-      - 7878:7878
+      - 100.120.109.59:7878:7878
     environment:
+      - TP_HOTIO=true
+      - TP_THEME=onedark
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/radarr:/config
+      - /opt/theme-park/radarr:/etc/cont-init.d/99-themepark
       - /mnt/mfs-drive:/drive
       - /mnt/knox:/knox
     labels:
@@ -440,13 +530,16 @@ services:
     healthcheck:
       test: ["CMD", "curl", "localhost:7879", "-fso", "/dev/null"]
     ports:
-      - 7879:7879
+      - 100.120.109.59:7879:7879
     environment:
+      - TP_HOTIO=true
+      - TP_THEME=organizr-dark
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/radarr4k:/config
+      - /opt/theme-park/radarr:/etc/cont-init.d/99-themepark
       - /mnt/mfs-drive:/drive
       - /mnt/knox:/knox
     labels:
@@ -461,13 +554,16 @@ services:
     healthcheck:
       test: ["CMD", "curl", "localhost:8989", "-fso", "/dev/null"]
     ports:
-      - 8989:8989
+      - 100.120.109.59:8989:8989
     environment:
+      - TP_HOTIO=true
+      - TP_THEME=plex
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/sonarr:/config
+      - /opt/theme-park/sonarr:/etc/cont-init.d/99-themepark
       - /mnt/mfs-drive:/drive
       - /mnt/knox:/knox
     labels:
