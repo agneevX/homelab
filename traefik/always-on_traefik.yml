@@ -1,0 +1,15 @@
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  http:
+    address: ":80"
+
+providers:
+  file:
+    filename: "/etc/traefik/file_provider.yml"
+    watch: true
+
+  docker:
+    defaultRule: "Host(`{{ index .Labels \"com.docker.compose.service\" }}.always-on.nt`)"

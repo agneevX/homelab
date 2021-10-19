@@ -1,13 +1,40 @@
 version: '3.8'
 
 services:
+  traefik:
+    container_name: traefik
+    image: traefik
+    restart: unless-stopped
+    ports:
+      - 82:80
+      - 8000:8080
+    volumes:
+      - /opt/appdata/traefik:/etc/traefik
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle
+    restart: unless-stopped
+    ports: 
+      - 9990:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
   blocky:
     image: spx01/blocky
     container_name: blocky
     restart: unless-stopped
     ports:
-      - 127.0.0.1:1201:53/udp
+      - 1200:53/udp
     environment:
       - TZ=Asia/Kolkata
     volumes:
@@ -24,18 +51,12 @@ services:
     image: hotio/unpackerr
     restart: unless-stopped
     environment:
-      # Sonarr
-      - UN_SONARR_0_URL=
-      - UN_SONARR_0_API_KEY=
       # Radarr
       - UN_RADARR_0_URL=
       - UN_RADARR_0_API_KEY= 
       # Radarr4K
       - UN_RADARR_1_URL=
       - UN_RADARR_1_API_KEY=
-      # Sonarr2
-      - UN_SONARR_1_URL=http://sonarr2:8989
-      - UN_SONARR_1_API_KEY=
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
@@ -92,26 +113,6 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/prowlarr:/config
-    labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-
-  sonarr2:
-    container_name: sonarr2
-    image: hotio/sonarr:nightly
-    restart: unless-stopped
-    ports:
-      - 8989:8989
-    healthcheck:
-      test: ["CMD", "curl", "localhost:8989", "-fso", "/dev/null"]
-    environment:
-      - PUID=1001
-      - PGID=1001
-      - TZ=Asia/Kolkata
-    volumes:
-      - /opt/appdata/sonarr:/config
-      - /mnt/mfs-drive:/drive
     labels:
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
@@ -191,8 +192,8 @@ services:
 #      - "org.hotio.pullio.notify=true"
 #      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
-  nginxproxymanager:
-    container_name: nginxproxymanager
+  nginx:
+    container_name: nginx
     image: jc21/nginx-proxy-manager
     restart: unless-stopped
     ports:

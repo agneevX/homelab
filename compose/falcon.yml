@@ -15,6 +15,97 @@ networks:
           gateway: 172.18.0.1
 
 services:
+  autoheal:
+    container_name: autoheal
+    image: willfarrell/autoheal
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - org.hotio.pullio.update=true 
+      - org.hotio.pullio.notify=true 
+      - org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK} 
+
+  cloudflared:
+    container_name: cloudflared
+    image: crazymax/cloudflared
+    labels:
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}
+
+  traefik:
+    container_name: traefik
+    image: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 8000:8080
+    volumes:
+      - /opt/appdata/traefik:/etc/traefik
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - traefik.http.routers.traefik.service=api@internal
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle
+    restart: unless-stopped
+    ports: 
+      - 9990:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+#  tailscale:
+#    container_name: tailscale
+#    image: tailscale/tailscale
+#    labels:
+#      - "org.hotio.pullio.update=true"
+#      - "org.hotio.pullio.notify=true"
+#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  owntone:
+    image: linuxserver/daapd
+    container_name: owntone
+    restart: unless-stopped
+    # network_mode: host
+    ports:
+      - 3688:3688
+      - 3689:3689
+    environment:
+      - PUID=1001
+      - PGID=1001
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/daapd/config:/config
+      - /opt/appdata/daapd/music:/music
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  caddy:
+    container_name: caddy
+    image: caddy
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - /opt/appdata/caddy/data:/data
+      - /opt/appdata/caddy/caddy:/config
+      - /opt/appdata/nginx-proxy-manager/data/ariaNg:/ariaNg
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
 #   photoprism:
 #     container_name: photoprism
@@ -32,22 +123,7 @@ services:
 #     environment:
 #       PHOTOPRISM_UID: 1001
 #       PHOTOPRISM_GID: 1001
-#       PHOTOPRISM_READONLY: "false"
-#       PHOTOPRISM_PUBLIC: "true"
-#       PHOTOPRISM_EXPERIMENTAL: "false"
-#       PHOTOPRISM_HTTP_HOST: "0.0.0.0"
-#       PHOTOPRISM_HTTP_PORT: 2342
-#       PHOTOPRISM_HTTP_COMPRESSION: "none"     # Improves transfer speed and bandwidth utilization (none or gzip)
 #       PHOTOPRISM_DATABASE_DRIVER: "sqlite"
-#       PHOTOPRISM_DARKTABLE_PRESETS: "false"   # Enables Darktable presets and disables concurrent RAW conversion
-#       PHOTOPRISM_THUMB_FILTER: "lanczos"      # Resample filter, best to worst: blackman, lanczos, cubic, linear
-#       PHOTOPRISM_THUMB_UNCACHED: "true"       # Enables on-demand thumbnail rendering (high memory and cpu usage)
-#       PHOTOPRISM_THUMB_SIZE: 2048             # Pre-rendered thumbnail size limit (default 2048, min 720, max 7680)
-#       # PHOTOPRISM_THUMB_SIZE: 4096           # Retina 4K, DCI 4K (requires more storage); 7680 for 8K Ultra HD
-#       PHOTOPRISM_THUMB_SIZE_UNCACHED: 7680    # On-demand rendering size limit (default 7680, min 720, max 7680)
-#       PHOTOPRISM_JPEG_SIZE: 7680              # Size limit for converted image files in pixels (720-30000)
-#       PHOTOPRISM_JPEG_QUALITY: 92             # Set to 95 for high-quality thumbnails (25-100)
-#       TF_CPP_MIN_LOG_LEVEL: 0                 # Show TensorFlow log messages for development
 #     labels:
 #       - "org.hotio.pullio.update=true"
 #       - "org.hotio.pullio.notify=true"
@@ -98,13 +174,14 @@ services:
     restart: unless-stopped
     user: "1001:1001"
     command: "watch"
-    healthcheck:
-      test: ["CMD", "wget", "-nv", "-t1", "--spider", "10.0.0.11:32400/identity"]
-    logging: 
+    logging:
       driver: none
     environment:
       - TZ=Asia/Kolkata
     volumes:
+      - type: bind
+        source: /dev/null
+        target: /app/config/last_update.log
       - /opt/appdata/plextraktsync:/app/config
     labels:
       - "org.hotio.pullio.update=true"
@@ -170,6 +247,7 @@ services:
       - /home/agneev:/files
       - /mnt:/mnt
     labels:
+      - traefik.http.routers.filebrowser.rule=Host(`files.falcon.nt`)
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
@@ -189,18 +267,18 @@ services:
 #       - "org.hotio.pullio.notify=true"
 #       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
-#   influxdb:
-#     image: influxdb
-#     container_name: influxdb
-#     restart: unless-stopped
-#     user: "1001:1001"
-#     volumes:
-#       - /opt/appdata/influxdb/data:/var/lib/influxdb2
-#       - /opt/appdata/influxdb/config:/etc/influxdb2
-#     labels:
-#       - "org.hotio.pullio.update=true"
-#       - "org.hotio.pullio.notify=true"
-#       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+  influxdb:
+    image: influxdb
+    container_name: influxdb
+    restart: unless-stopped
+    user: "1001:1001"
+    volumes:
+      - /opt/appdata/influxdb/data:/var/lib/influxdb2
+      - /opt/appdata/influxdb/config:/etc/influxdb2
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
   grafana:
     image: grafana/grafana
@@ -210,7 +288,7 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-nv", "-t1", "--spider", "localhost:3000"]
     environment:
-      - GF_SERVER_ROOT_URL=http://grafana.server
+      - GF_SERVER_ROOT_URL=http://grafana.falcon.net
       - GF_AUTH_DISABLE_LOGIN_FORM=true
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
@@ -327,7 +405,7 @@ services:
     container_name: scrutiny
     image: hotio/scrutiny
     restart: unless-stopped
-    logging: 
+    logging:
       driver: none
     cap_add:
       - SYS_RAWIO
@@ -352,56 +430,36 @@ services:
       - "org.hotio.pullio.notify=true"
       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
       
-#  node-red:
-#    container_name: node-red
-#    image: nodered/node-red
-#    restart: unless-stopped
-#    user: "1001:1001"
-#    environment:
-#      - TZ=Asia/Kolkata
-#    volumes:
-#      - /opt/appdata/nodered:/data
-#    labels:
-#      - "org.hotio.pullio.update=true"
-#      - "org.hotio.pullio.notify=true"
-#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+  node-red:
+    container_name: node-red
+    image: nodered/node-red
+    restart: unless-stopped
+    user: "1001:1001"
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/node-red:/data
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
 
-#   code-server:
-#     container_name: code-server
-#     image: linuxserver/code-server
-#     restart: unless-stopped
-#     healthcheck:
-#       test: ["CMD", "curl", "localhost:8443", "-fso", "/dev/null"]
-#     environment:
-#       - PUID=1001
-#       - PGID=1001
-#       - TZ=Asia/Kolkata
-#     volumes:
-#       - /opt/appdata/code-server:/config
-#       # Project folders
-#       - /home/agneev:/config/workspace/home
-#     labels:
-#       - "org.hotio.pullio.update=true"
-#       - "org.hotio.pullio.notify=true"
-#       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-
-  nginx-proxy-manager:
-    container_name: nginx-proxy-manager
-    image: jc21/nginx-proxy-manager
+  code-server:
+    container_name: code-server
+    image: linuxserver/code-server
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "/bin/check-health"]
-      interval: 10s
-      timeout: 3s
-    ports:
-      - 80:80
+      test: ["CMD", "curl", "localhost:8443", "-fso", "/dev/null"]
     environment:
-      DB_SQLITE_FILE: "/data/npm_db.sqlite"
-      DISABLE_IPV6: 'true'
+      - PUID=1001
+      - PGID=1001
+      - TZ=Asia/Kolkata
     volumes:
-      - /opt/appdata/nginx-proxy-manager/data:/data
-      - /opt/appdata/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+      - /opt/appdata/code-server:/config
+      # Project folders
+      - /home/agneev:/config/workspace/home
     labels:
+      - traefik.http.routers.code-server.rule=Host(`code.falcon.nt`)
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
@@ -441,6 +499,7 @@ services:
       - /opt/appdata/qbittorrent:/config
       # Download directories
       - /home/agneev/drive-local/local/qbt:/drive/local/qbt
+      - /home/agneev/qbittorrent:/downloads
       - /mnt/knox:/knox
       # Post download script
       - type: bind
@@ -448,6 +507,14 @@ services:
         target: /scripts/qbt_post_dl.sh
         read_only: true
     labels:
+      # qBittorrent
+      - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
+      - traefik.http.routers.qbittorrent.service=qbittorrent
+      - traefik.http.routers.qbittorrent.rule=Host(`qbt.falcon.nt`)
+      # Flood
+      - traefik.http.services.flood.loadbalancer.server.port=3000
+      - traefik.http.routers.flood.rule=Host(`flood.falcon.nt`)
+      - traefik.http.routers.flood.service=flood
       - "org.hotio.pullio.update=true"
       - "org.hotio.pullio.notify=true"
       - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
@@ -463,8 +530,6 @@ services:
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
-    depends_on:
-      - tautulli
     volumes:
       - /opt/appdata/plex:/config
       - type: tmpfs
@@ -528,9 +593,9 @@ services:
     image: hotio/radarr:nightly
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "localhost:7879", "-fso", "/dev/null"]
+      test: ["CMD", "curl", "localhost:7878", "-fso", "/dev/null"]
     ports:
-      - 100.120.109.59:7879:7879
+      - 100.120.109.59:7879:7878
     environment:
       - TP_HOTIO=true
       - TP_THEME=organizr-dark
@@ -563,6 +628,30 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/sonarr:/config
+      - /opt/theme-park/sonarr:/etc/cont-init.d/99-themepark
+      - /mnt/mfs-drive:/drive
+      - /mnt/knox:/knox
+    labels:
+      - "org.hotio.pullio.update=true"
+      - "org.hotio.pullio.notify=true"
+      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+
+  sonarr4k:
+    container_name: sonarr4k
+    image: hotio/sonarr:nightly
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8989", "-fso", "/dev/null"]
+    ports:
+      - 100.120.109.59:8990:8989
+    environment:
+      - TP_HOTIO=true
+      - TP_THEME=organizr-dark
+      - PUID=1001
+      - PGID=1001
+      - TZ=Asia/Kolkata
+    volumes:
+      - /opt/appdata/sonarr4k:/config
       - /opt/theme-park/sonarr:/etc/cont-init.d/99-themepark
       - /mnt/mfs-drive:/drive
       - /mnt/knox:/knox

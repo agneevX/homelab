@@ -1,0 +1,6 @@
+http:
+  routers:
+    aria:
+      rule: "HostRegexp(`{subdomain:[a-z]+}.falcon.nt`)"
+      service: caddy-agneev@docker
+      priority: 1
