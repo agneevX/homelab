@@ -6,11 +6,12 @@ My servers setup at home
 - [Homelab Setup](#homelab-setup)
   - [Hardware](#hardware)
     - [NAS/media server](#nasmedia-server)
-    - [DNS server](#dns-server)
+    - [DNS/proxy server](#dnsproxy-server)
+    - [Cloud VMs](#cloud-vms)
+  - [Unified access](#unified-access)
   - [File management](#file-management)
     - [Cloud storage](#cloud-storage)
     - [Local storage](#local-storage)
-  - [Media management](#media-management)
 
 ## Hardware
 
@@ -40,23 +41,23 @@ I run two Raspberry Pi 4s' as servers currently.
 - 🔊 3.5mm out...
   - Fenda E200 Plus
 
+Main server that runs most of my self-hosted apps and also functions as a NAS.
+
 Runs (mostly in Docker):
 
-[🔗 Docker Compose](./compose/falcon.yml)
+[🔗 **Docker Compose**](./docker-compose/falcon.yml)
 
 - 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
+- 📶 Grafana/Promethus
 - 📽 Plex Media Server
-- 📺 Sonarr/Radarr/Prowlarr
-- 🙋‍♂️ Overseerr
+- 📺 Sonarr/Radarr
 - 🧲 qBittorrent
-
-More in [`docker_compose.yml`](./docker-compose.yml).
 
 ---
 
-### DNS server
+### DNS/proxy server
 
-<img src="https://www.raspberrypi.org/homepage-9df4b/static/raspberry-pi-os-32bit-3697e93ad6828805810ffa5f4651423c.jpg" width="300">
+<img src="https://www.raspberrypi.com/app/uploads/2021/04/raspberrypi4-hero2-1536x1021.png" width="300">
 
 `always-on`
 
@@ -65,13 +66,40 @@ More in [`docker_compose.yml`](./docker-compose.yml).
 - 📼 32GB microSD card
 - 🌐 Gigabit ethernet
 
+Functions as the main DNS and DHCP server, while also blocking ads in the network, using AdGuard Home.
+
+For DNS, I use Google DNS, which supports EDNS Client Subnet, which provides faster speeds and a decreased latency for certain CDNs like Akamai or Cloudfront.
+
+Due to the usage of ECS by default, DNS queries are quite slow, so for DNS caching, I use the versatile Unbound.
+
+Since Unbound is limited to DNS over TLS, and I've had issues with DNSSEC failures in the past, I use blocky as upstream, which connects to Google's servers over DNS over HTTPS.
+
+This server also handles the Traefik network proxy over Tailscale. More on that below.
+
+Since this server runs on a SD card, `log2ram` is used to store logs in-memory to reduce writes.
+
 Runs (mostly in Docker):
 
-[🔗 Docker Compose](./compose/always-on.yml)
+[🔗 **Docker Compose**](./docker-compose/always-on.yml)
 
-- 🌎 AdGuard Home
-- 📱 Homebridge
-- 🌎 Homer
+### Cloud VMs
+
+- Oracle Cloud (A1 Compute)
+- Google Cloud Platform (`e2-micro`)
+- Digital Ocean Droplets
+
+[🔗 **Docker Compose**](./docker-compose/oracle1.yml)
+
+## Unified access
+
+I use Tailscale to access all devices and services. All cloud VMs have their storages mounted locally using NFS, securely.
+
+Some self-hosted apps are hosted in cloud to minimize latency, I use Traefik to access them as if they're hosted locally, using the syntax `<service_name>.<machine_name>.nt`.
+
+This does require Traefik and *Dockerized* apps on all VMs, with Traefik routers created locally (for each VM) that proxy requests to them.
+VMs not running Docker (due to resource constraints) must be added manually or until I can find a better solution.
+
+This means I'm able to load Jackett, hosted in the `gcp1` VM using the URL `jackett.gcp1.nt`.
 
 ## File management
 
@@ -79,41 +107,27 @@ Files are stored both in the cloud and locally.
 
 ### Cloud storage
 
-[rclone](https://github.com/rclone/rclone) and [plexdrive](https://github.com/plexdrive/plexdrive) is used to communicate with various cloud storages.
+[rclone](https://github.com/rclone/rclone) is used to communicate with various cloud storages.
 
 During system startup, two systemd files mount rclone remotes to [`/mnt/rc-drive`](./systemd/rc-drive.service) and [`/mnt/rc-crypt`](./systemd/rc-crypt.service) and caches the entire file structure in memory.
 
 Another systemd file uses mergerFS to create a mount at [`/mnt/mfs-drive`](./systemd/mfs-drive.service) that combines the above two mount points with another local folder, that way all new files are created locally.
 
-Plexdrive mounts are mounted the same way.
-
-```bash
+```sh
 # SSD cache
-/opt/.drive ->-|
-/mnt           |
-../*drive -->--|
-../*crypt -->--|
-/drive  <------|
+/home/../drive-local ->-|
+/mnt/rc-drive  ---->----|
+/mnt/rc-crypt  ---->----|
+# NFS mounts over Tailscale
+/mnt/oc*-drive ---->----|
+                        |
+/mnt/mfs-drive  <-------|
 ```
 
-Everyday at 1PM, a cron job runs a script that moves the local content to the cloud, depending upon their age.
+At 6AM everyday, a cron job runs a script that moves local content to the cloud.
 
 ### Local storage
 
 Also at startup, mergerFS combines all external drives and creates a single mount point at `/mnt/mfs-knox` using a systemd mount file.
 
 All disks are formatted in `ext4` (with no reserved space) and mounted inside `/mnt/pool` using fstab entries.
-
----
-
-## Media management
-
-I use Plex to play content on my devices from my server.
-
-For cloud Plex playback only, I use [Plexdrive](./systemd/mfs-plexdrive.service) since its faster, otherwise all other apps use the rclone-mergerFS mount.
-
-Both `/knox` and `/drive` (plexdrive) are added to Plex as I store content in both places.
-
-I've changed a few settings in Plex to optimize for cloud files:
-
-![plex](https://user-images.githubusercontent.com/19761269/99898814-68e84300-2cca-11eb-895b-e5b800eb9440.png "Plex library configuration")

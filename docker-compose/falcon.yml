@@ -598,7 +598,7 @@ services:
       - 100.120.109.59:7879:7878
     environment:
       - TP_HOTIO=true
-      - TP_THEME=organizr-dark
+      - TP_THEME=organizr
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata
@@ -646,7 +646,7 @@ services:
       - 100.120.109.59:8990:8989
     environment:
       - TP_HOTIO=true
-      - TP_THEME=organizr-dark
+      - TP_THEME=organizr
       - PUID=1001
       - PGID=1001
       - TZ=Asia/Kolkata

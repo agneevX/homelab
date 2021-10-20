@@ -1,7 +1,7 @@
 port: 1200
 logLevel: fatal
 
-upstreamTimeout: 750ms
+upstreamTimeout: 1s
 upstream:
   default:
     - https://8.8.8.8/dns-query
