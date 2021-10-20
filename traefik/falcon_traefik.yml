@@ -8,7 +8,7 @@ entryPoints:
 
 providers:
   file:
-    filename: "/etc/traefik/dynamic.yml"
+    filename: "/etc/traefik/file-provider.yml"
     watch: true
 
   docker:

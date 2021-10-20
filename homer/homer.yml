@@ -6,7 +6,9 @@ logo: "logo.png"
 columns: 3
 header: true
 footer: false
-connectivityCheck: false
+
+stylesheet:
+  - "./assets/Homer-Theme/assets/custom.css"
 
 theme: default
 colors:
@@ -37,23 +39,26 @@ colors:
 
 links:
   - icon: "far fa-edit"
-    url: "http://files.svr2:9800/files/homer/config.yml"
+    url: "http://filebrowser.always-on.nt/files/appdata/homer/config.yml"
     
   - icon: "fab fa-docker"
-    url: "http://files.server:9800/files/compose.yml"
+    url: "http://files.falcon.nt/files/compose.yml"
     
   - name: 2
     icon: "fab fa-docker"
-    url: "http://files.svr2:9800/files/compose.yml"
+    url: "http://filebrowser.always-on.nt/files/compose.yml"
     
   #- icon: "fas fa-file-download"
-#    url: "http://torrent.svr2/"
+#    url: "http://torrent.always-on.nt/"
+    
+  - icon: "fas fa-project-diagram"
+    url: "http://npm.always-on.nt/"
     
   - icon: "fas fa-folder-open"
-    url: "http://files.svr2:9800/files"
+    url: "http://filebrowser.always-on.nt/files"
     
   - icon: "fas fa-fire"
-    url: "http://prometheus.server" # Prometheus
+    url: "http://prometheus.falcon.nt" # Prometheus
     
   - icon: "fas fa-wifi"
     url: "http://routerlogin.net"
@@ -62,19 +67,7 @@ links:
     url: "http://satellite.lan"
 
   - icon: "fas fa-cloud-download-alt"
-    url: "http://qbt-oc1.svr2/" # qBittorrent (oracle1)
-    
-  - icon: "fas fa-project-diagram"
-    url: "http://oracle1:81/" # Nginx proxy manager
-    
-  - icon: "fas fa-shield-alt"
-    url: "http://oracle1:3000" # AdGuard Home
-    
-#   - icon: "fas fa-closed-captioning"
-#     url: "http://bazarr.server" # Bazarr
-    
-  - icon: "fas fa-play-circle"
-    url: "http://oracle1:31337/" # Kitana
+    url: "http://qbittorrent.oc1.nt/" # qBittorrent (oracle1)
     
 #  - name: "Page 2"
 #    icon: "fas fa-columns"
@@ -87,215 +80,206 @@ services:
     
       - name: Radarr
         subtitle: "Movie collection manager"
-        url: "http://radarr.server"
-        logo: "assets/homer-icons/png/radarr.png"
+        url: "http://radarr.falcon.nt"
+        logo: "./assets/homer-icons/png/radarr.png"
 
       - name: Radarr4K
         subtitle: "Manage 4K movies"
-        url: "http://radarr4k.server"
-        logo: "assets/img2/4k-film-2.svg"
-        tag: oc1
+        url: "http://radarr4k.falcon.nt"
+        logo: "./assets/custom/4k-film-2.svg"
 
       - name: Sonarr
         subtitle: "TV shows automator"
-        url: "http://sonarr.server"
-        logo: "assets/homer-icons/svg/sonarr.svg"
+        url: "http://sonarr.falcon.nt"
+        logo: "./assets/homer-icons/svg/sonarr.svg"
+
+      - name: Sonarr4K
+        subtitle: "4K TV shows automator"
+        url: "http://sonarr4k.falcon.nt"
+        logo: "./assets/homer-icons/svg/sonarr.svg"
 
       - name: Overseerr
         subtitle: "Media discovery tool"
-        url: "http://overseerr.server/"
-        logo: "assets/homer-icons/svg/overseerr.svg"
-        tag: oc1
-        
-      - name: Flood
-        subtitle: "Beautiful torrent GUI"
-        url: "http://flood-torrent.server/"
-        logo: "assets/homer-icons/png/flood.png"
-        
-    #   - name: Petio
-    #     subtitle: "Plex companion"
-    #     url: "http://petio.svr2/"
-    #     logo: "https://raw.githubusercontent.com/petio-team/petio/master/frontend/public/favicon/android-icon-192x192.png"
-    #     tag: oc1
+        url: "http://overseerr.oc1.nt/"
+        logo: "./assets/homer-icons/svg/overseerr.svg"
 
-      - name: Tautulli
-        subtitle: "Plex graps & stats"
-        url: "http://tautulli.server/"
-        logo: "assets/homer-icons/png/tautulli.png"
-
-  - name: Hosted
+  - name: Applications
     icon: "fas fa-rocket"
     items:
 
-      - name: Speedtest tracker
-        subtitle: "Automated speed tests"
-        url: "http://speedtest.svr2/"
-        logo: "assets/custom/speedtest-tracker.png"
-
       - name: Code-server
         subtitle: "Browser-based editor"
-        url: "http://code.server/"
-        logo: "assets/custom/code-server.png"
+        url: "http://code.falcon.nt/"
+        logo: "./assets/custom/code-server.png"
 
-      - name: Mealie
-        subtitle: "Pantry for recipes"
-        url: "http://mealie.server/"
-#        logo: "assets/homer-icons/png/mealie.png"
-        logo: "assets/custom/food-2.png"
-
-      - name: Nextcloud
-        subtitle: "Cloud-hosted file storage"
-        url: "https://agneev.duckdns.org/"
-        logo: "assets/homer-icons/png/nextcloud.png"
-        tag: oc1
-
+      - name: Tautulli
+        subtitle: "Plex graps & stats"
+        url: "http://tautulli.falcon.nt/"
+        logo: "./assets/homer-icons/png/tautulli.png"
+        
+      - name: FreshRSS
+        subtitle: "Reading for days"
+        url: "http://freshrss.falcon.nt"
+        logo: "./assets/homer-icons/png/freshrss.png"
+ 
       - name: Home Assistant
         subtitle: "Next-gen smart home"
-        url: "http://assistant.server:8123/"
-        logo: "assets/custom/home-assistant.png"
+        url: "http://home-assistant.falcon.nt:8123/"
+        logo: "./assets/custom/home-assistant.png"
         
       - name: Homebridge
         subtitle: "HomeKit all things"
-        url: "http://homebridge.svr2/"
-        logo: "assets/homer-icons/png/homebridge.png"
+        url: "http://homebridge.always-on.nt/"
+        logo: "./assets/homer-icons/png/homebridge.png"
         
   - name: Manage
     icon: "fas fa-user-shield"
     items:
-    
-      - name: AdGuard Home
-        subtitle: "Network ad-blocker"
-        url: "http://adguard.svr2/"
-        logo: "assets/homer-icons/svg/adguardhome.svg"
 
       - name: Portainer
         subtitle: "Advanced Docker GUI"
-        url: "http://portainer.svr2/"
-        logo: "assets/homer-icons/png/portainer.png"
+        url: "http://portainer.always-on.nt/"
+        logo: "./assets/homer-icons/png/portainer.png"
 
-      - name: Grafana
-        subtitle: "Visualized stats"
-        url: "http://grafana.server/"
-        logo: "assets/homer-icons/png/grafana.png"
-        
-      - name: Chronograf
-        subtitle: "Metrics visualizations"
-        url: "http://chronograf.server"
-        logo: "assets/homer-icons/png/chronograf.png"
-        
-    #   - name: Smokeping
-    #     subtitle: "Graph network latency"
-    #     url: "http://smokeping.svr2/smokeping/?target=DNSPing"
-    #     logo: "assets/custom/monitor.png"
-    
-      - name: Router
-        subtitle: "Stats from router Netdata"
-        url: "http://routerlogin.net:19999#menu_net_submenu_brwan;theme=slate"
-        logo: "assets/homer-icons/png/netdata.png"
-
-      - name: Nginx manager
-        subtitle: "Main network proxy"
-        url: "http://npm.svr2/nginx/proxy"
-        logo: "assets/homer-icons/png/nginxproxymanager.png"
-        
-    #   - name: Pi-hole
-    #     subtitle: "DNS blackhole"
-    #     url: "http://pihole.svr2/admin"
-    #     logo: "assets/homer-icons/png/pihole.png"
-    #     tag: oc1
-        
-  - name: "Files"
-    icon: "fas fa-hdd"
-    items:
-        
-      - name: aria2
-        subtitle: "Ultra-fast HTTP downloader"
-        url: "http://aria.server/"
-        logo: "assets/homer-icons/png/ariang.png"
-        
-    #   - name: Plexdrive
-    #     subtitle: "Encrypted cloud drive"
-    #     url: "http://plexdrive.svr2:9800/files/plexdrive/"
-    #     logo: "assets/homer-icons/png/plexdrive.png"
+      - name: Traefik
+        subtitle: "Docker proxy"
+        url: "http://traefik.falcon.nt/dashboard/"
+        logo: "./assets/homer-icons/png/traefik.png"
 
       - name: File Browser
-        subtitle: "Browse files on NAS server"
-        url: "http://files.server:9800/files/"
-        logo: "assets/homer-icons/svg/filebrowser.svg"
-        
-      - name: qBittorrent
-        subtitle: "Best torrent client"
-        url: "http://qbittorrent.server/"
-        logo: "assets/homer-icons/png/qbittorrent.png"
-        
+        subtitle: "Manage files on NAS"
+        url: "http://filebrowser.falcon.nt/"
+        logo: "./assets/homer-icons/svg/filebrowser.svg"
+
+      - name: Flood
+        subtitle: "Beautiful torrent GUI"
+        url: "http://flood.falcon.nt/"
+        logo: "./assets/homer-icons/png/flood.png"
+
       - name: Scrutiny
         subtitle: "Visualized SMART data"
-        url: "http://scrutiny.server/"
-        logo: "assets/homer-icons/png/scrutiny.png"
+        url: "http://scrutiny.falcon.nt/"
+        logo: "./assets/homer-icons/png/scrutiny.png"
+
+  - name: "Network"
+    icon: "fas fa-project-diagram"
+    items:
+
+      - name: AdGuard Home
+        subtitle: "Network ad-blocker"
+        url: "http://adguard.always-on.nt/"
+        logo: "./assets/homer-icons/svg/adguardhome.svg"
+        
+      - name: Speedtest tracker
+        subtitle: "Automated speed tests"
+        url: "http://speedtest.always-on.nt/"
+        logo: "./assets/custom/speedtest-tracker.png"
+        
+      - name: Grafana
+        subtitle: "Visualized stats"
+        url: "http://grafana.falcon.nt/"
+        logo: "./assets/homer-icons/png/grafana.png"
+
+      - name: Router
+        subtitle: "Stats from router Netdata"
+        url: "http://routerlogin.nt:19999/#menu_net_submenu_eth0;theme=slate;help=false"
+        logo: "./assets/homer-icons/png/netdata.png"
+        
+      - name: OpenSpeedTest
+        subtitle: "LAN speed tests"
+        logo: "./assets/homer-icons/png/openspeedtest.png"
+        url: "http://openspeedtest.always-on.nt:8000/"
 
   - name: "Server"
     icon: "fas fa-server"
     items:
+      - name: aria2
+        subtitle: "Ultra-fast HTTP downloader"
+        url: "http://aria.falcon.nt/"
+        logo: "./assets/homer-icons/png/ariang.png"
 
-      - name: InfluxDB
-        subtitle: "Modern metrics recorder"
-        url: "http://influxdb.server"
-        logo: "assets/custom/influxdb.png"
-        
-    #   - name: Uptime-kuma
-    #     subtitle: "Status monitoring"
-    #     url: "http://uptime.svr2/"
-    #     logo: "https://github.com/louislam/uptime-kuma/raw/master/public/icon.svg"
-        
+      - name: qBittorrent
+        subtitle: "Best torrent client"
+        url: "http://qbittorrent.falcon.nt/"
+        logo: "./assets/homer-icons/png/qbittorrent.png"
+    
       - name: always-on
         subtitle: "Netdata on DNS server"
-        url: "http://netdata.svr2:19999/"
-        logo: "assets/homer-icons/png/netdata.png"
+        url: "http://netdata.always-on.nt"
+        logo: "./assets/homer-icons/png/netdata.png"
 
       - name: falcon
         subtitle: "Netdata on media server"
-        url: "http://netdata.server/"
-#        logo: assets/img2/server-folder.svg
-        logo: "assets/custom/netdata-alt.png"
-        
-      - name: NPM (falcon)
-        subtitle: "Docker net reverse proxy"
-        url: "http://npm.server/nginx/proxy"
-        logo: "assets/homer-icons/png/nginxproxymanager.png"
+        url: "http://netdata.falcon.nt"
+#        logo: ./assets/custom/server-folder.svg
+        logo: "./assets/custom/netdata-alt.png"
 
-    #   - name: Cockpit
-    #     subtitle: "Server manager"
-    #     url: "http://cockpit.server:9090/"
-    #     logo: "assets/homer-icons/png/cockpit.png"
+      - name: Yacht
+        subtitle: "Material UI Docker manager"
+        url: "http://yacht.falcon.nt"
+        logo: "./assets/homer-icons/png/yacht.png"
 
   - name: "Tools"
     icon: "fas fa-toolbox"
     items:
-        
+    
+      - name: ArchiveBox
+        subtitle: "Archive websites with ease"
+        url: "http://archivebox.falcon.nt/admin/core/snapshot/"
+        logo: "./assets/homer-icons/png/archivebox.png"
+
+      - name: Node-RED
+        subtitle: Programming tool
+        url: "http://node-red.falcon.nt/"
+        logo: "./assets/homer-icons/png/nodered.png"
+
       - name: Prowlarr
         subtitle: "Indexer manager"
-        url: "http://prowlarr.server/"
-        logo: "assets/homer-icons/svg/prowlarr.svg"
+        url: "http://prowlarr.oc1.nt/"
+        logo: "./assets/homer-icons/svg/prowlarr.svg"
 
       - name: Bazarr
         subtitle: "Subtitles for all media"
-        url: "http://bazarr.svr2/"
-        logo: "assets/homer-icons/svg/bazarr.svg"
-        tag: oc1
-
-    #   - name: Node-RED
-    #     subtitle: Programming tool
-    #     url: "http://node-red.server/"
-    #     logo: "assets/homer-icons/png/nodered.png"
+        url: "http://bazarr.oc1.nt/"
+        logo: "./assets/homer-icons/svg/bazarr.svg"
 
       - name: Jackett
         subtitle: "All indexers in one place"
-        url: "http://jackett.svr2/"
-        logo: "assets/homer-icons/png/jackett.png"
-        tag: oc1
+        url: "http://jackett.gcp1.nt/"
+        logo: "./assets/homer-icons/png/jackett.png"
+    
+    #   - name: Petio
+    #     subtitle: "Plex companion"
+    #     url: "http://petio.oc1.nt/"
+    #     logo: "https://raw.githubusercontent.com/petio-team/petio/master/frontend/public/favicon/android-icon-192x192.png"
+
+    #   - name: Chronograf
+    #     subtitle: "Metrics visualizations"
+    #     url: "http://chronograf.falcon.nt"
+    #     logo: "./assets/homer-icons/png/chronograf.png"
         
-      - name: OpenSpeedTest
-        subtitle: "LAN speed tests"
-        logo: "assets/homer-icons/png/openspeedtest.png"
-        url: "http://openspeedtest.svr2:8200/"
+    #   - name: Smokeping
+    #     subtitle: "Graph network latency"
+    #     url: "http://smokeping.always-on.nt/smokeping/?target=DNSPing"
+    #     logo: "./assets/custom/monitor.png"
+
+    #   - name: InfluxDB
+    #     subtitle: "Modern metrics recorder"
+    #     url: "http://influxdb.falcon.nt"
+    #     logo: "./assets/custom/influxdb.png"
         
+    #   - name: Uptime-kuma
+    #     subtitle: "Status monitoring"
+    #     url: "http://uptime.falcon.nt/"
+    #     logo: "https://github.com/louislam/uptime-kuma/raw/master/public/icon.svg"
+
+    #   - name: Cockpit
+    #     subtitle: "Server manager"
+    #     url: "http://cockpit.falcon.nt:9090/"
+    #     logo: "./assets/homer-icons/png/cockpit.png"
+    
+    #   - name: Pi-hole
+    #     subtitle: "DNS blackhole"
+    #     url: "http://pihole.oc1.nt/admin"
+    #     logo: "./assets/homer-icons/png/pihole.png"
+    #     tag: oc1.nt
