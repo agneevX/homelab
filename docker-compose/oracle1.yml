@@ -1,33 +1,81 @@
 version: '3.8'
 
+x-env: &env
+  PGID: 1001
+  PUID: 1001
+  UMASK: 002
+  TZ: Asia/Kolkata
+
+x-labels: &pullio
+  org.hotio.pullio.update: "true"
+  org.hotio.pullio.notify: "true"
+  org.hotio.pullio.discord.webhook: ${DISCORD_WEBHOOK}
+
 services:
+
+  autoheal:
+    container_name: autoheal
+    image: willfarrell/autoheal
+    restart: always
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  plextraktsync:
+    container_name: plextraktsync
+    image: ghcr.io/taxel/plextraktsync
+    restart: unless-stopped
+    user: "1001:1001"
+    command: watch
+    environment:
+      PTS_LOG_DIR: /logs
+      TZ: Asia/Kolkata
+    tmpfs:
+      - /logs:size=10m,uid=1001,gid=1001
+    volumes:
+      - /opt/appdata/plextraktsync:/app/config
+    labels:
+      <<: *pullio
+
+  bazarr4k:
+    container_name: bazarr4k
+    image: linuxserver/bazarr
+    restart: unless-stopped
+    environment:
+      DOCKER_MODS: ghcr.io/gilbn/theme.park:bazarr
+      TP_THEME: aquamarine
+      <<: *env
+    volumes:
+      - /opt/appdata/bazarr4k:/config
+      - /mnt/mfs-drive:/drive
+    labels:
+      <<: *pullio
+
   traefik:
     container_name: traefik
     image: traefik
     restart: unless-stopped
+    command:
+      - --api.insecure=true
+      - --entrypoints.http.address=:90
+      - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.oc1.nt`)
     ports:
-      - 82:80
+      - 90:90
       - 8000:8080
     volumes:
-      - /opt/appdata/traefik:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   dozzle:
     container_name: dozzle
     image: amir20/dozzle
     restart: unless-stopped
-    ports: 
-      - 9990:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   blocky:
     image: spx01/blocky
@@ -36,40 +84,36 @@ services:
     ports:
       - 1200:53/udp
     environment:
-      - TZ=Asia/Kolkata
+      TZ: Asia/Kolkata
     volumes:
-      - type: bind
-        source: /opt/appdata/blocky/blocky.yml
-        target: /app/config.yml
+      - /opt/appdata/blocky/blocky.yml:/app/config.yml:ro
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   unpackerr:
     container_name: unpackerr
     image: hotio/unpackerr
     restart: unless-stopped
     environment:
+      # Sonarr
+      UN_SONARR_0_URL:
+      UN_SONARR_0_API_KEY:
+      # Sonarr4K
+      UN_SONARR_1_URL:
+      UN_SONARR_1_API_KEY:
       # Radarr
-      - UN_RADARR_0_URL=
-      - UN_RADARR_0_API_KEY= 
+      UN_RADARR_0_URL:
+      UN_RADARR_0_API_KEY:
       # Radarr4K
-      - UN_RADARR_1_URL=
-      - UN_RADARR_1_API_KEY=
-      - PUID=1001
-      - PGID=1001
-      - TZ=Asia/Kolkata
+      UN_RADARR_1_URL:
+      UN_RADARR_1_API_KEY:
+      <<: *env
+    tmpfs:
+      - /config:size=1m
     volumes:
       - /home/ubuntu/drive-local/local/qbt:/drive/local/qbt
-      - type: tmpfs
-        target: /config
-        tmpfs:
-          size: 1mb
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   openspeedtest:
     image: openspeedtest/latest
@@ -78,9 +122,7 @@ services:
     ports:
       - 9999:3000
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   adguardhome:
     container_name: adguardhome
@@ -95,9 +137,7 @@ services:
       - /opt/appdata/adguardhome/workdir:/opt/adguardhome/work
       - /opt/appdata/adguardhome/config:/opt/adguardhome/conf
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   prowlarr:
     container_name: prowlarr
@@ -105,18 +145,12 @@ services:
     restart: unless-stopped
     ports:
       - 9696:9696
-    healthcheck:
-      test: ["CMD", "curl", "localhost:9696", "-fso", "/dev/null"]
     environment:
-      - PUID=1001
-      - PGID=1001
-      - TZ=Asia/Kolkata
+      <<: *env
     volumes:
       - /opt/appdata/prowlarr:/config
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   socks5-proxy:
     image: serjs/go-socks5-proxy
@@ -127,70 +161,33 @@ services:
     environment:
       - TZ=Asia/Kolkata
       - PROXY_USER=agneev
-      - PROXY_PASSWORD=
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   overseerr:
     container_name: overseerr
     image: hotio/overseerr
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "localhost:5055", "-fso", "/dev/null"]
-    ports:
-      - 5055:5055
     environment:
-      - PUID=1001
-      - PGID=1001
-      - TZ=Asia/Kolkata
+      <<: *env
     volumes:
       - /opt/appdata/overseerr:/config
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   bazarr:
     container_name: bazarr
-    image: hotio/bazarr
+    image: linuxserver/bazarr
     restart: unless-stopped
-    ports:
-      - 6767:6767
-    healthcheck:
-      test: ["CMD", "curl", "localhost:6767", "-fso", "/dev/null"]
     environment:
-      - PUID=1001
-      - PGID=1001
-      - TZ=Asia/Kolkata
+      DOCKER_MODS: ghcr.io/gilbn/theme.park:bazarr
+      TP_THEME: organizr
+      <<: *env
     volumes:
       - /opt/appdata/bazarr:/config
       - /mnt/mfs-drive:/drive
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-
-#  jackett:
-#    container_name: jackett
-#    image: hotio/jackett
-#    restart: unless-stopped
-#    ports:
-#      - 9117:9117
-#    healthcheck:
-#      test: ["CMD", "curl", "localhost:9117", "-fso", "/dev/null"]
-#    environment:
-#      - PUID=1001
-#      - PGID=1001
-#      - UMASK=002
-#      - TZ=Asia/Kolkata
-#    volumes:
-#      - /opt/appdata/jackett:/config
-#    labels:
-#      - "org.hotio.pullio.update=true"
-#      - "org.hotio.pullio.notify=true"
-#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   nginx:
     container_name: nginx
@@ -201,37 +198,29 @@ services:
       - 81:81
       - 443:443
     environment:
-      DB_SQLITE_FILE: "/data/npm_db.sqlite"
+      DB_SQLITE_FILE: /data/npm_db.sqlite
       DISABLE_IPV6: "true"
     volumes:
       - /opt/appdata/nginx-proxy-manager/data:/data
       - /opt/appdata/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   qbittorrent:
     container_name: qbittorrent
     image: hotio/qflood
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
     ports:
       - 8100:8080
       - 8101:3000
-    healthcheck:
-      test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
     environment:
-      - PUID=1001
-      - PGID=1001
-      - TZ=Asia/Kolkata
+      <<: *env
     volumes:
       - /opt/appdata/qbittorrent:/config
+      #
       - /home/ubuntu/drive-local/local/qbt:/drive/local/qbt
-      - type: bind
-        source: /home/ubuntu/scripts/qbt.sh
-        target: /scripts/qbt.sh
-        read_only: true
+      - /home/ubuntu/scripts/qbt.sh:/script.sh:ro
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
