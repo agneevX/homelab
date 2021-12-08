@@ -1,4 +1,15 @@
-version: "3.9"
+version: '3.9'
+
+x-env: &env
+  PGID: 1001
+  PUID: 1001
+  UMASK: 002
+  TZ: Asia/Kolkata
+
+x-labels: &pullio
+  org.hotio.pullio.update: true
+  org.hotio.pullio.notify: true
+  org.hotio.pullio.discord.webhook: ${DISCORD_WEBHOOK}
 
 volumes:
   netdata-lib:
@@ -22,51 +33,46 @@ networks:
           gateway: 172.19.0.1
 
 services:
+
+  hetrixtools:
+    container_name: hetrixtools
+    image: peet2k17/hetrix-agent
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      HETRIX_AGENT_PARAMS: "$HETRIX_AGENT_PARAMS"
+    labels:
+      <<: *pullio
+
   traefik:
     container_name: traefik
     image: traefik
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+    extra_hosts:
+      - "host.docker.internal:10.0.0.10"
     ports:
       - 80:80
-      - 8000:8080
     environment:
-      - TZ=Asia/Kolkata
+      <<: *env
     volumes:
       - /opt/appdata/traefik:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      - traefik.http.routers.traefik.service=api@internal
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      traefik.http.routers.traefik.service: api@internal
+      <<: *pullio
 
   dozzle:
     container_name: dozzle
     image: amir20/dozzle
     restart: unless-stopped
-    ports: 
+    ports:
       - 9990:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-
-#  organizr:
-#    container_name: organizr
-#    image: organizr/organizr
-#    restart: unless-stopped
-#    volumes:
-#      - /opt/appdata/organizr:/config
-#    environment:
-#      - PGID=1001
-#      - PUID=1001
-#      - TZ=Asia/Kolkata
-#    labels:
-#      - "org.hotio.pullio.update=true"
-#      - "org.hotio.pullio.notify=true"
-#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   unbound:
     container_name: unbound
@@ -75,52 +81,29 @@ services:
     ports:
       - 127.0.0.1:5053:5053/udp
     volumes:
-      - type: bind
-        source: /opt/appdata/unbound/unbound.conf
-        target: /etc/unbound/unbound.conf
-    labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      - /opt/appdata/unbound/unbound.conf:/etc/unbound/unbound.conf
     networks:
       dns: {}
+    labels:
+      traefik.enable: false
+      <<: *pullio
 
   blackbox:
     image: prom/blackbox-exporter
     container_name: blackbox
     hostname: blackbox
     restart: unless-stopped
-    command: 
-      - "--log.level=warn"
-      - "--config.file=/config/config.yml"
+    command:
+     - --log.level=warn
+     - --config.file=/config/config.yml
     cap_add:
-      - CAP_NET_RAW
+     - CAP_NET_RAW
     ports:
-      - 9115:9115
+     - 9115:9115
     volumes:
-      - /opt/appdata/blackbox:/config
+     - /opt/appdata/blackbox:/config
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-
-  telegraf:
-    image: telegraf
-    container_name: telegraf
-    hostname: telegraf
-    restart: unless-stopped
-    cap_add:
-      - CAP_NET_RAW
-    ports:
-      - 10.0.0.10:9001:9000
-    volumes:
-      - /opt/appdata/telegraf:/etc/telegraf
-    logging:
-      driver: none
-    labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+     <<: *pullio
 
   filebrowser:
     image: filebrowser/filebrowser
@@ -128,23 +111,24 @@ services:
     restart: unless-stopped
     user: "1001:1001"
     command:
-      - "--disable-exec"
-      - "--disable-type-detection-by-header"
-      - "--disable-preview-resize"
-      - "--disable-thumbnails"
+      - --disable-exec
+      - --disable-type-detection-by-header
+      - --disable-preview-resize
+      - --disable-thumbnails
     environment:
-      - FB_ROOT=/files
-      - FB_CONFIG=/srv/config.json
-      - FB_DATABASE=/srv/filebrowser.db
+      FB_ROOT: /files
+      FB_CONFIG: /config/config.json
+      FB_DATABASE: /config/filebrowser.db
+    tmpfs:
+      - /srv:size=1m
     volumes:
-      - /opt/appdata/filebrowser:/srv
+      - /opt/appdata/filebrowser:/config
+      #
+      - /home/agneev:/files/home
       - /opt/appdata:/files/appdata
-      - /home/agneev:/files
-      - /mnt:/mnt
+      - /mnt:/files/mnt
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   blocky:
     image: spx01/blocky
@@ -153,18 +137,14 @@ services:
     healthcheck:
       test: ["CMD", "dig", "+short", "-p1200", "healthcheck.blocky"]
     environment:
-      - TZ=Asia/Kolkata
+      <<: *env
     volumes:
-      - type: bind
-        source: /opt/appdata/blocky/blocky.yml
-        target: /app/config.yml
-    labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      - /opt/appdata/blocky/blocky.yml:/app/config.yml
     networks:
       dns:
         ipv4_address: 172.19.0.254
+    labels:
+      <<: *pullio
 
   homer:
     image: b4bz/homer
@@ -172,162 +152,98 @@ services:
     restart: unless-stopped
     logging:
       driver: none
+    environment:
+      UID: 1001
+      GID: 1001
     volumes:
       - /opt/appdata/homer:/www/assets
-    environment:
-      - UID=1001
-      - GID=1001
     labels:
-      - traefik.http.routers.homer.rule=Host(`home.lab`)
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-
-  nginx:
-    container_name: nginx
-    image: jc21/nginx-proxy-manager
-    restart: unless-stopped
-    ports:
-      - 81:81
-    healthcheck:
-      test: ["CMD", "/bin/check-health"]
-      interval: 10s
-      timeout: 3s
-    environment:
-      DB_SQLITE_FILE: "/data/npm_db.sqlite"
-      DISABLE_IPV6: "true"
-    volumes:
-      - /opt/appdata/nginx-proxy-manager/data:/data
-      - /opt/appdata/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
-      - type: tmpfs
-        target: /data/logs
-        tmpfs:
-          size: 32mb
-      - type: tmpfs
-        target: /var/cache
-        tmpfs:
-          size: 64mb
-    labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      traefik.http.routers.homer.rule: Host(`home.lab`)
+      <<: *pullio
 
   netdata:
     image: netdata/netdata
     container_name: netdata
     hostname: always-on
     restart: unless-stopped
-    logging:
-      driver: none
-    ports:
-      - 19999:19999
     healthcheck:
       test: "/usr/sbin/health.sh > /dev/null 2>&1"
-      interval: 60s
-      timeout: 10s
+    logging:
+      driver: none
     cap_add:
       - SYS_PTRACE
     security_opt:
       - apparmor:unconfined
+    ports:
+      - 19999:19999
+    environment:
+      NETDATA_CLAIM_TOKEN: $NETDATA_CLAIM_TOKEN
+      NETDATA_CLAIM_URL: https://app.netdata.cloud
+      NETDATA_CLAIM_ROOMS: $NETDATA_CLAIM_ROOMS
+      PGID: 1001
     volumes:
       - /opt/appdata/netdata:/etc/netdata
       - netdata-lib:/var/lib/netdata
       - netdata-cache:/var/cache/netdata
-      # System access 
+      #
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/passwd:/host/etc/passwd:ro
       - /etc/group:/host/etc/group:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   speedtest-tracker:
     container_name: speedtest-tracker
-    image: henrywhitaker3/speedtest-tracker:latest-arm
+    image: henrywhitaker3/speedtest-tracker:dev-arm
     restart: unless-stopped
     ports:
       - 8700:80
     healthcheck:
       test: ["CMD", "curl", "localhost", "-fso", "/dev/null"]
     environment:
-      - PUID=1001
-      - PGID=1001
-      - UMASK=002
-      - TZ=Asia/Kolkata
-      - OOKLA_EULA_GDPR=true
+      <<: *env
+      OOKLA_EULA_GDPR: true
+    tmpfs:
+      - /config/www:size=500m
+      - /config/log:size=32m
     volumes:
+      - /opt/appdata/speedtest-tracker/app:/config/www/app/Bin
       - /opt/appdata/speedtest-tracker:/config
-      - type: tmpfs
-        target: /config/log
-        tmpfs:
-          size: 32mb
-      - type: tmpfs
-        target: /config/www/node_modules
-        tmpfs:
-          size: 400mb
-      - type: tmpfs
-        target: /config/www/vendor
-        tmpfs:
-          size: 100mb
-      - type: tmpfs
-        target: /config/www/public
-        tmpfs:
-          size: 50mb
     labels:
-      - traefik.http.routers.speedtest-tracker.rule=Host(`speedtest.always-on.nt`)
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-      
+      traefik.http.routers.speedtest-tracker.rule: Host(`speedtest.always-on.nt`)
+      <<: *pullio
+
   adguardhome:
     container_name: adguardhome
-    image: adguard/adguardhome
+    image: adguard/adguardhome:edge
     restart: unless-stopped
     network_mode: host
+    command: "-c /config/config.yml -w /config --no-check-update"
     healthcheck:
-      test: "/bin/netstat -pant 2> /dev/null | /bin/grep 53 > /dev/null"
+      test: "netstat -pant 2>/dev/null | grep AdGuard | grep 53 >/dev/null"
     environment:
-      - TZ=Asia/Kolkata
+      <<: *env
     volumes:
-      - /opt/appdata/adguardhome/config:/opt/adguardhome/conf
-      - /opt/appdata/adguardhome/data:/opt/adguardhome/work
+      - /opt/appdata/adguardhome:/config
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      traefik.http.routers.adguardhome.rule: Host(`adguard.always-on.nt`)
+      traefik.http.services.adguardhome.loadbalancer.server.port: 3100
+      traefik.http.routers.adguardhome.middlewares: adguardhome-themepark@file
+      <<: *pullio
 
-#  heimdall:
-#    image: linuxserver/heimdall
-#    container_name: heimdall
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "curl", "localhost", "-fso", "/dev/null"]
-#    environment:
-#      - PUID=1001
-#      - PGID=1001
-#      - TZ=Asia/Kolkata
-#    volumes:
-#      - /opt/appdata/heimdall:/config
-#    labels:
-#      - "org.hotio.pullio.update=true"
-#      - "org.hotio.pullio.notify=true"
-#      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-      
   openspeedtest:
     image: openspeedtest/latest
     container_name: openspeedtest
     restart: unless-stopped
-    ports:
-      - 9999:3000
     healthcheck:
       test: ["CMD", "curl", "localhost:3000", "-fso", "/dev/null"]
+    ports:
+      - 9999:3000
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      <<: *pullio
 
   homebridge:
     image: oznu/homebridge
@@ -337,27 +253,37 @@ services:
     healthcheck:
       test: ["CMD", "curl", "localhost:8581", "-fso", "/dev/null"]
     environment:
-      - PGID=1001
-      - PUID=1001
-      - TZ=Asia/Kolkata
+      <<: *env
     volumes:
       - /opt/appdata/homebridge:/homebridge
     labels:
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
-      
+      traefik.http.services.homebridge.loadbalancer.server.port: 8581
+      <<: *pullio
+
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
     restart: always
+#    healthcheck:
+#      test: ["CMD", "wget", "localhost:9000", "-nv", "-t1", "--spider"]
+    environment:
+      TZ: Asia/Kolkata
     ports:
       - 9000:9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/appdata/portainer:/data
     labels:
-      - traefik.http.services.portainer.loadbalancer.server.port=9000
-      - "org.hotio.pullio.update=true"
-      - "org.hotio.pullio.notify=true"
-      - "org.hotio.pullio.discord.webhook=${DISCORD_WEBHOOK}"
+      traefik.http.services.portainer.loadbalancer.server.port: 9000 # Multiple ports exposed
+      <<: *pullio
+
+  uptime-kuma:
+    image: louislam/uptime-kuma
+    container_name: uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/uptime-kuma:/app/data
+    environment:
+      <<: *env
+    labels:
+      <<: *pullio
