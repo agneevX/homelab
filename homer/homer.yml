@@ -1,14 +1,14 @@
-title: "Homelab Dash"
-subtitle: "always-on"
-documentTitle: "Homelab Dash"
-logo: "logo.png"
+title: Homelab Dash
+subtitle: always-on
+documentTitle: Homelab Dash
+logo: logo.png
 
 columns: 3
 header: true
 footer: false
 
 stylesheet:
-  - "./assets/Homer-Theme/assets/custom.css"
+  - ./assets/Homer-Theme/assets/custom.css
 
 theme: default
 colors:
@@ -22,7 +22,7 @@ colors:
     text-header: "#ffffff"
     text-title: "#303030"
     text-subtitle: "#424242"
-    card-shadow: rgba(0, 0, 0, 0.1)
+    card-shadow: "rgba(0, 0, 0, 0.1)"
     link-hover: "#363636"
   dark:
     highlight-primary: "#1B3E88"
@@ -34,252 +34,325 @@ colors:
     text-header: "#f7f7f7"
     text-title: "#fafafa"
     text-subtitle: "#f5f5f5"
-    card-shadow: rgba(0, 0, 0, 0.4)
+    card-shadow: "rgba(0, 0, 0, 0.4)"
     link-hover: "#ffdd57"
 
 links:
-  - icon: "far fa-edit"
-    url: "http://filebrowser.always-on.nt/files/appdata/homer/config.yml"
+  - icon: far fa-edit
+    url: http://filebrowser.always-on.nt/files/appdata/homer/config.yml
+    target: _blank
     
-  - icon: "fab fa-docker"
-    url: "http://files.falcon.nt/files/compose.yml"
+  - icon: fab fa-docker
+    url: http://files.falcon.nt/files/home/compose.yml
+    target: _blank
     
   - name: 2
-    icon: "fab fa-docker"
-    url: "http://filebrowser.always-on.nt/files/compose.yml"
-    
-  #- icon: "fas fa-file-download"
-#    url: "http://torrent.always-on.nt/"
-    
-  - icon: "fas fa-project-diagram"
-    url: "http://npm.always-on.nt/"
-    
-  - icon: "fas fa-folder-open"
-    url: "http://filebrowser.always-on.nt/files"
-    
-  - icon: "fas fa-fire"
-    url: "http://prometheus.falcon.nt" # Prometheus
-    
-  - icon: "fas fa-wifi"
-    url: "http://routerlogin.net"
+    icon: fab fa-docker
+    url: http://filebrowser.always-on.nt/files/home/compose.yml
+    target: _blank
 
-  - icon: "fas fa-satellite-dish"
-    url: "http://satellite.lan"
+    
+  #- icon: fas fa-file-download
+#    url: http://torrent.always-on.nt
+#    target: _blank
+    
+#   - icon: fas fa-project-diagram
+#     url: http://npm.always-on.nt
+ #   target: _blank
+    
+  - name: 2
+    icon: fas fa-folder-open
+    url: http://filebrowser.always-on.nt/files"
+    target: _blank
+    
+  - name: 2
+    icon: fas fa-align-left
+    url: http://dozzle.always-on.nt
+    target: _blank
+    
+  - name: 2
+    icon: fas fa-traffic-light
+    url: http://traefik.always-on.nt
+    target: _blank
+    
+  - icon: fas fa-fire
+    url: http://prometheus.falcon.nt
+    target: _blank
+    
+  - icon: fas fa-wifi
+    url: http://routerlogin.net/
+    target: _blank
 
-  - icon: "fas fa-cloud-download-alt"
-    url: "http://qbittorrent.oc1.nt/" # qBittorrent (oracle1)
+  - icon: fas fa-satellite-dish
+    url: http://satellite.lan/
+    target: _blank
+
+  - icon: fas fa-cloud-download-alt
+    url: http://qbittorrent.oc1.nt
+    target: _blank
+    
+  - name: 2
+    icon: fas fa-cloud-download-alt
+    url: http://qbittorrent.oc2.nt
+    target: _blank
+    
+  - name: 4K
+    icon: fas fa-closed-captioning
+    url: http://bazarr4k.oc1.nt
+    target: _blank
     
 #  - name: "Page 2"
 #    icon: "fas fa-columns"
 #    url: "#additionnal-page"
 
 services:
-  - name: "Media"
-    icon: "fas fa-film"
+  - name: Media
+    icon: fas fa-film
     items:
     
+      - name: Overseerr
+        subtitle: Discover new media
+        url: http://overseerr.oc1.nt
+        logo: ./assets/homer-icons/svg/overseerr.svg
+        target: _blank
+    
       - name: Radarr
-        subtitle: "Movie collection manager"
-        url: "http://radarr.falcon.nt"
-        logo: "./assets/homer-icons/png/radarr.png"
+        subtitle: Movie collection manager
+        url: http://radarr.falcon.nt
+        logo: ./assets/homer-icons/png/radarr.png
+        target: _blank
 
       - name: Radarr4K
-        subtitle: "Manage 4K movies"
-        url: "http://radarr4k.falcon.nt"
-        logo: "./assets/custom/4k-film-2.svg"
+        subtitle: Manage 4K movies
+        url: http://radarr4k.falcon.nt
+        logo: ./assets/custom/radarr4k.png
+        target: _blank
 
       - name: Sonarr
-        subtitle: "TV shows automator"
-        url: "http://sonarr.falcon.nt"
-        logo: "./assets/homer-icons/svg/sonarr.svg"
+        subtitle: TV shows automator
+        url: http://sonarr.falcon.nt
+        logo: ./assets/homer-icons/svg/sonarr.svg
+        target: _blank
 
       - name: Sonarr4K
-        subtitle: "4K TV shows automator"
-        url: "http://sonarr4k.falcon.nt"
-        logo: "./assets/homer-icons/svg/sonarr.svg"
+        subtitle: Automate 4K TV shows
+        url: http://sonarr4k.falcon.nt
+        logo: ./assets/custom/sonarr4k.png
+        target: _blank
 
-      - name: Overseerr
-        subtitle: "Media discovery tool"
-        url: "http://overseerr.oc1.nt/"
-        logo: "./assets/homer-icons/svg/overseerr.svg"
+      - name: Plex
+        subtitle: Media server
+        url: http://plex.falcon.nt/web/index.html
+        logo: ./assets/homer-icons/png/plex.png
+        target: _blank
 
   - name: Applications
     icon: "fas fa-rocket"
     items:
 
       - name: Code-server
-        subtitle: "Browser-based editor"
-        url: "http://code.falcon.nt/"
-        logo: "./assets/custom/code-server.png"
+        subtitle: Write code in browser
+        url: http://code.falcon.nt
+        logo: ./assets/custom/code-server.png
+        target: _blank
+
+      - name: Grafana
+        subtitle: Visualized metrics
+        url: http://grafana.falcon.nt
+        logo: ./assets/homer-icons/png/grafana.png
+        target: _blank
 
       - name: Tautulli
-        subtitle: "Plex graps & stats"
-        url: "http://tautulli.falcon.nt/"
-        logo: "./assets/homer-icons/png/tautulli.png"
-        
-      - name: FreshRSS
-        subtitle: "Reading for days"
-        url: "http://freshrss.falcon.nt"
-        logo: "./assets/homer-icons/png/freshrss.png"
- 
+        subtitle: Plex, graphed
+        url: http://tautulli.falcon.nt
+        logo: ./assets/homer-icons/png/tautulli.png
+        target: _blank
+
       - name: Home Assistant
-        subtitle: "Next-gen smart home"
-        url: "http://home-assistant.falcon.nt:8123/"
-        logo: "./assets/custom/home-assistant.png"
+        subtitle: Next-gen smart home
+        url: http://home-assistant.falcon.nt
+        logo: ./assets/custom/home-assistant.png
+        target: _blank
         
       - name: Homebridge
-        subtitle: "HomeKit all things"
-        url: "http://homebridge.always-on.nt/"
-        logo: "./assets/homer-icons/png/homebridge.png"
+        subtitle: HomeKit all things
+        url: http://homebridge.always-on.nt
+        logo: ./assets/homer-icons/png/homebridge.png
+        target: _blank
+        
+      - name: FreshRSS
+        subtitle: Reading for days
+        url: http://freshrss.falcon.nt
+        logo: ./assets/homer-icons/png/freshrss.png
+        target: _blank
         
   - name: Manage
     icon: "fas fa-user-shield"
     items:
 
       - name: Portainer
-        subtitle: "Advanced Docker GUI"
-        url: "http://portainer.always-on.nt/"
-        logo: "./assets/homer-icons/png/portainer.png"
+        subtitle: Advanced Docker GUI
+        url: http://portainer.always-on.nt
+        logo: ./assets/homer-icons/png/portainer.png
+        target: _blank
 
+      - name: Dozzle
+        subtitle: Container logs
+        url: http://dozzle.falcon.nt
+        logo: ./assets/homer-icons/png/dozzle.png
+        target: _blank
+        
       - name: Traefik
-        subtitle: "Docker proxy"
-        url: "http://traefik.falcon.nt/dashboard/"
-        logo: "./assets/homer-icons/png/traefik.png"
+        subtitle: Docker proxy
+        url: http://traefik.falcon.nt/dashboard/
+        logo: ./assets/homer-icons/png/traefik.png
+        target: _blank
 
-      - name: File Browser
-        subtitle: "Manage files on NAS"
-        url: "http://filebrowser.falcon.nt/"
-        logo: "./assets/homer-icons/svg/filebrowser.svg"
-
-      - name: Flood
-        subtitle: "Beautiful torrent GUI"
-        url: "http://flood.falcon.nt/"
-        logo: "./assets/homer-icons/png/flood.png"
-
-      - name: Scrutiny
-        subtitle: "Visualized SMART data"
-        url: "http://scrutiny.falcon.nt/"
-        logo: "./assets/homer-icons/png/scrutiny.png"
+      - name: Netdata (falcon)
+        url: http://netdata.falcon.nt/#after=-300;before=0"
+        logo: ./assets/homer-icons/png/netdata.png
+        target: _blank
+        
+      - name: Netdata (always-on)
+        url: http://netdata.always-on.nt/#after=-300;before=0"
+        logo: ./assets/custom/netdata-alt.png
+        target: _blank
+    
+      - name: Yacht
+        subtitle: Manage Docker host
+        url: http://yacht.falcon.nt
+        logo: ./assets/homer-icons/png/yacht.png
+        target: _blank
 
   - name: "Network"
     icon: "fas fa-project-diagram"
     items:
 
       - name: AdGuard Home
-        subtitle: "Network ad-blocker"
-        url: "http://adguard.always-on.nt/"
-        logo: "./assets/homer-icons/svg/adguardhome.svg"
+        subtitle: Network DNS/DHCP/ad-blocker
+        url: http://adguard.always-on.nt
+        logo: ./assets/homer-icons/svg/adguardhome.svg
+        target: _blank
         
       - name: Speedtest tracker
-        subtitle: "Automated speed tests"
-        url: "http://speedtest.always-on.nt/"
-        logo: "./assets/custom/speedtest-tracker.png"
-        
-      - name: Grafana
-        subtitle: "Visualized stats"
-        url: "http://grafana.falcon.nt/"
-        logo: "./assets/homer-icons/png/grafana.png"
+        subtitle: Automated speed tests
+        url: http://speedtest.always-on.nt
+        logo: ./assets/custom/speedtest-tracker.png
+        target: _blank
 
       - name: Router
-        subtitle: "Stats from router Netdata"
-        url: "http://routerlogin.nt:19999/#menu_net_submenu_eth0;theme=slate;help=false"
-        logo: "./assets/homer-icons/png/netdata.png"
+        subtitle: Stats from router Netdata
+        url: http://routerlogin.net:19999/#menu_net_submenu_eth0;theme=slate;help=false
+        logo: ./assets/homer-icons/png/netdata.png
+        target: _blank
+    
+      - name: Uptime-kuma
+        subtitle: Service monitoring
+        url: http://uptime-kuma.always-on.nt
+        logo: ./assets/custom/uptime-kuma.svg
+        target: _blank
         
       - name: OpenSpeedTest
-        subtitle: "LAN speed tests"
-        logo: "./assets/homer-icons/png/openspeedtest.png"
-        url: "http://openspeedtest.always-on.nt:8000/"
+        subtitle: LAN speed tests
+        url: http://openspeedtest.always-on.nt:9999/
+        logo: ./assets/homer-icons/png/openspeedtest.png
+        target: _blank
 
-  - name: "Server"
-    icon: "fas fa-server"
+  - name: Downloads
+    icon: fas fa-server
     items:
+
+      - name: File Browser
+        subtitle: Manage files on NAS
+        url: http://files.falcon.nt
+        logo: ./assets/homer-icons/svg/filebrowser.svg
+        target: _blank
+
+      - name: Flood
+        subtitle: Next-gen torrent GUI
+        url: http://flood.falcon.nt
+        logo: ./assets/homer-icons/png/flood.png
+        target: _blank
+        
       - name: aria2
-        subtitle: "Ultra-fast HTTP downloader"
-        url: "http://aria.falcon.nt/"
-        logo: "./assets/homer-icons/png/ariang.png"
+        subtitle: HTTP downloader
+        url: http://aria.falcon.nt
+        logo: ./assets/homer-icons/png/ariang.png
+        target: _blank
 
       - name: qBittorrent
-        subtitle: "Best torrent client"
-        url: "http://qbittorrent.falcon.nt/"
-        logo: "./assets/homer-icons/png/qbittorrent.png"
-    
-      - name: always-on
-        subtitle: "Netdata on DNS server"
-        url: "http://netdata.always-on.nt"
-        logo: "./assets/homer-icons/png/netdata.png"
+        subtitle: Best torrent client
+        url: http://qbt.falcon.nt
+        logo: ./assets/homer-icons/png/qbittorrent.png
+        target: _blank
 
-      - name: falcon
-        subtitle: "Netdata on media server"
-        url: "http://netdata.falcon.nt"
-#        logo: ./assets/custom/server-folder.svg
-        logo: "./assets/custom/netdata-alt.png"
+      - name: Prowlarr
+        subtitle: Indexer manager
+        url: http://prowlarr.oc1.nt
+        logo: ./assets/homer-icons/svg/prowlarr.svg
+        target: _blank
 
-      - name: Yacht
-        subtitle: "Material UI Docker manager"
-        url: "http://yacht.falcon.nt"
-        logo: "./assets/homer-icons/png/yacht.png"
-
-  - name: "Tools"
-    icon: "fas fa-toolbox"
+  - name: Tools
+    icon: fas fa-toolbox
     items:
-    
+
+      - name: Scrutiny
+        subtitle: Visualized SMART data
+        url: http://scrutiny.falcon.nt
+        logo: ./assets/homer-icons/png/scrutiny.png
+        target: _blank
+
       - name: ArchiveBox
-        subtitle: "Archive websites with ease"
-        url: "http://archivebox.falcon.nt/admin/core/snapshot/"
-        logo: "./assets/homer-icons/png/archivebox.png"
+        subtitle: Archive websites with ease
+        url: http://archivebox.falcon.nt/admin/core/snapshot/
+        logo: ./assets/homer-icons/png/archivebox.png
+        target: _blank
 
       - name: Node-RED
         subtitle: Programming tool
-        url: "http://node-red.falcon.nt/"
-        logo: "./assets/homer-icons/png/nodered.png"
-
-      - name: Prowlarr
-        subtitle: "Indexer manager"
-        url: "http://prowlarr.oc1.nt/"
-        logo: "./assets/homer-icons/svg/prowlarr.svg"
+        url: http://node-red.falcon.nt
+        logo: ./assets/homer-icons/png/nodered.png
+        target: _blank
 
       - name: Bazarr
-        subtitle: "Subtitles for all media"
-        url: "http://bazarr.oc1.nt/"
-        logo: "./assets/homer-icons/svg/bazarr.svg"
+        subtitle: Subtitles for all media
+        url: http://bazarr.oc1.nt
+        logo: ./assets/homer-icons/svg/bazarr.svg
+        target: _blank
 
       - name: Jackett
-        subtitle: "All indexers in one place"
-        url: "http://jackett.gcp1.nt/"
-        logo: "./assets/homer-icons/png/jackett.png"
-    
+        subtitle: All indexers in one place
+        url: http://jackett.gcp1.nt
+        logo: ./assets/homer-icons/png/jackett.png
+        target: _blank
+
     #   - name: Petio
-    #     subtitle: "Plex companion"
-    #     url: "http://petio.oc1.nt/"
-    #     logo: "https://raw.githubusercontent.com/petio-team/petio/master/frontend/public/favicon/android-icon-192x192.png"
+    #      subtitle: "Plex companion"
+    #      url: http://petio.oc1.nt
+    #      logo: https://raw.githubusercontent.com/petio-team/petio/master/frontend/public/favicon/android-icon-192x192.png
+    #      target: _blank
 
-    #   - name: Chronograf
-    #     subtitle: "Metrics visualizations"
-    #     url: "http://chronograf.falcon.nt"
-    #     logo: "./assets/homer-icons/png/chronograf.png"
+    #     - name: Chronograf
+    #       subtitle: "Metrics visualizations"
+    #       url: http://chronograf.falcon.nt
+    #       logo: ./assets/homer-icons/png/chronograf.png
+    #       target: _blank
         
-    #   - name: Smokeping
-    #     subtitle: "Graph network latency"
-    #     url: "http://smokeping.always-on.nt/smokeping/?target=DNSPing"
-    #     logo: "./assets/custom/monitor.png"
+    #     - name: Smokeping
+    #       subtitle: "Graph network latency"
+    #       url: http://smokeping.always-on.nt/smokeping/?target=DNSPing"
+    #       logo: ./assets/custom/monitor.png
+    #       target: _blank
 
-    #   - name: InfluxDB
-    #     subtitle: "Modern metrics recorder"
-    #     url: "http://influxdb.falcon.nt"
-    #     logo: "./assets/custom/influxdb.png"
-        
-    #   - name: Uptime-kuma
-    #     subtitle: "Status monitoring"
-    #     url: "http://uptime.falcon.nt/"
-    #     logo: "https://github.com/louislam/uptime-kuma/raw/master/public/icon.svg"
+    #     - name: InfluxDB
+    #       subtitle: "Modern metrics recorder"
+    #       url: http://influxdb.falcon.nt
+    #       logo: ./assets/custom/influxdb.png
+    #       target: _blank
 
-    #   - name: Cockpit
-    #     subtitle: "Server manager"
-    #     url: "http://cockpit.falcon.nt:9090/"
-    #     logo: "./assets/homer-icons/png/cockpit.png"
-    
-    #   - name: Pi-hole
-    #     subtitle: "DNS blackhole"
-    #     url: "http://pihole.oc1.nt/admin"
-    #     logo: "./assets/homer-icons/png/pihole.png"
-    #     tag: oc1.nt
+    #     - name: Cockpit
+    #       subtitle: "Server manager"
+    #       url: http://cockpit.falcon.nt:9090/
+    #       logo: ./assets/homer-icons/png/cockpit.png
+    #       target: _blank
+
