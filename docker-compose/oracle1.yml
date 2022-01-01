@@ -13,6 +13,21 @@ x-labels: &pullio
 
 services:
 
+  vnstat:
+    image: vergoh/vnstat
+    container_name: vnstat
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      SERVER_NAME: oracle1
+      HTTP_PORT: 7000
+      LARGE_FONTS: 1
+      HTTP_LOG: /dev/null
+    volumes:
+      - /opt/appdata/vnstat:/var/lib/vnstat
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
   autoheal:
     container_name: autoheal
     image: willfarrell/autoheal
@@ -83,8 +98,6 @@ services:
     restart: unless-stopped
     ports:
       - 1200:53/udp
-    environment:
-      TZ: Asia/Kolkata
     volumes:
       - /opt/appdata/blocky/blocky.yml:/app/config.yml:ro
     labels:
@@ -115,24 +128,13 @@ services:
     labels:
       <<: *pullio
 
-  openspeedtest:
-    image: openspeedtest/latest
-    container_name: openspeedtest
-    restart: unless-stopped
-    ports:
-      - 9999:3000
-    labels:
-      <<: *pullio
-
-  adguardhome:
-    container_name: adguardhome
-    image: adguard/adguardhome:edge
+  adguard-home:
+    container_name: adguard-home
+    image: adguard/adguardhome
     restart: unless-stopped
     network_mode: host
     healthcheck:
       test: "/bin/netstat -pant 2> /dev/null | /bin/grep 53 > /dev/null"
-    environment:
-      - TZ=Asia/Kolkata
     volumes:
       - /opt/appdata/adguardhome/workdir:/opt/adguardhome/work
       - /opt/appdata/adguardhome/config:/opt/adguardhome/conf
@@ -146,21 +148,10 @@ services:
     ports:
       - 9696:9696
     environment:
+      # TP_THEME: space-gray
       <<: *env
     volumes:
       - /opt/appdata/prowlarr:/config
-    labels:
-      <<: *pullio
-
-  socks5-proxy:
-    image: serjs/go-socks5-proxy
-    container_name: socks5-proxy
-    restart: unless-stopped
-    ports:
-      - 32069:1080
-    environment:
-      - TZ=Asia/Kolkata
-      - PROXY_USER=agneev
     labels:
       <<: *pullio
 
@@ -168,6 +159,8 @@ services:
     container_name: overseerr
     image: hotio/overseerr
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "localhost:5055", "-fso", "/dev/null"]
     environment:
       <<: *env
     volumes:
@@ -177,7 +170,7 @@ services:
 
   bazarr:
     container_name: bazarr
-    image: linuxserver/bazarr
+    image: linuxserver/bazarr:development
     restart: unless-stopped
     environment:
       DOCKER_MODS: ghcr.io/gilbn/theme.park:bazarr
@@ -189,22 +182,6 @@ services:
     labels:
       <<: *pullio
 
-  nginx:
-    container_name: nginx
-    image: jc21/nginx-proxy-manager
-    restart: unless-stopped
-    ports:
-      - 80:80
-      - 81:81
-      - 443:443
-    environment:
-      DB_SQLITE_FILE: /data/npm_db.sqlite
-      DISABLE_IPV6: "true"
-    volumes:
-      - /opt/appdata/nginx-proxy-manager/data:/data
-      - /opt/appdata/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
-    labels:
-      <<: *pullio
 
   qbittorrent:
     container_name: qbittorrent
@@ -224,3 +201,24 @@ services:
       - /home/ubuntu/scripts/qbt.sh:/script.sh:ro
     labels:
       <<: *pullio
+
+#  petio:
+#    container_name: petio
+#    image: hotio/petio:nightly
+#    restart: unless-stopped
+#    environment:
+#      <<: *env
+#    volumes:
+#      - /opt/appdata/petio:/config
+#    labels:
+#      <<: *pullio
+
+#  mongodb:
+#    container_name: mongodb
+#    image: mongo
+#    user: "1001:1001"
+#    volumes:
+#      - /opt/appdata/mongodb/configdb:/data/configdb
+#      - /opt/appdata/mongodb/data:/data/db
+#    labels:
+#      <<: *pullio

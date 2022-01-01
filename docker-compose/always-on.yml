@@ -34,19 +34,58 @@ networks:
 
 services:
 
-  hetrixtools:
-    container_name: hetrixtools
-    image: peet2k17/hetrix-agent
+  castblock:
+    container_name: castblock
+    image: ghcr.io/nichobi/sponsorblockcast
     restart: unless-stopped
     network_mode: host
     environment:
-      HETRIX_AGENT_PARAMS: "$HETRIX_AGENT_PARAMS"
+      SBCCATEGORIES: sponsor
+      SBCYOUTUBEAPIKEY: 
+    labels:
+      <<: *pullio
+
+  airconnect:
+    container_name: airconnect
+    image: 1activegeek/airconnect
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      ARCH_VAR: aarch64
+    labels:
+      <<: *pullio
+
+  vnstat:
+    image: vergoh/vnstat
+    container_name: vnstat
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      SERVER_NAME: always-on
+      HTTP_PORT: 7000
+      LARGE_FONTS: 1
+      HTTP_LOG: /dev/null
+    volumes:
+      - /opt/appdata/vnstat:/var/lib/vnstat
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    labels:
+      traefik.http.services.vnstat.loadbalancer.server.port: 7000
+      <<: *pullio
+
+  duckdns:
+    container_name: duckdns
+    image: linuxserver/duckdns
+    restart: unless-stopped
+    environment:
+      SUBDOMAINS:
+      TOKEN:
     labels:
       <<: *pullio
 
   traefik:
     container_name: traefik
-    image: traefik
+    image: traefik:v2.5.6
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "traefik", "healthcheck"]
@@ -79,7 +118,8 @@ services:
     image: klutchell/unbound
     restart: unless-stopped
     ports:
-      - 127.0.0.1:5053:5053/udp
+      - 127.0.0.1:5053:53/udp
+      - 127.0.0.1:5053:53/tcp
     volumes:
       - /opt/appdata/unbound/unbound.conf:/etc/unbound/unbound.conf
     networks:
@@ -87,6 +127,18 @@ services:
     labels:
       traefik.enable: false
       <<: *pullio
+
+  unbound2:
+    container_name: unbound-split
+    image: klutchell/unbound
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/unbound/unbound2.conf:/etc/unbound/unbound.conf
+    networks:
+      dns:
+        ipv4_address: 172.19.0.230
+    labels:
+      traefik.enable: false
 
   blackbox:
     image: prom/blackbox-exporter
@@ -130,19 +182,39 @@ services:
     labels:
       <<: *pullio
 
-  blocky:
+  blocky-gdns:
     image: spx01/blocky
-    container_name: blocky
+    container_name: blocky-gdns
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "dig", "+short", "-p1200", "healthcheck.blocky"]
-    environment:
-      <<: *env
     volumes:
-      - /opt/appdata/blocky/blocky.yml:/app/config.yml
+      - /opt/appdata/blocky/blocky-gdns.yml:/app/config.yml
     networks:
       dns:
-        ipv4_address: 172.19.0.254
+        ipv4_address: 172.19.0.240
+    labels:
+      <<: *pullio
+
+  blocky-quad9:
+    image: spx01/blocky
+    container_name: blocky-quad9
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/blocky/blocky-quad9.yml:/app/config.yml
+    networks:
+      dns:
+        ipv4_address: 172.19.0.241
+    labels:
+      <<: *pullio
+
+  blocky-cf:
+    image: spx01/blocky
+    container_name: blocky-cf
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/blocky/blocky-cf.yml:/app/config.yml
+    networks:
+      dns:
+        ipv4_address: 172.19.0.242
     labels:
       <<: *pullio
 
@@ -204,8 +276,8 @@ services:
     healthcheck:
       test: ["CMD", "curl", "localhost", "-fso", "/dev/null"]
     environment:
-      <<: *env
       OOKLA_EULA_GDPR: true
+      <<: *env
     tmpfs:
       - /config/www:size=500m
       - /config/log:size=32m
@@ -216,16 +288,14 @@ services:
       traefik.http.routers.speedtest-tracker.rule: Host(`speedtest.always-on.nt`)
       <<: *pullio
 
-  adguardhome:
-    container_name: adguardhome
-    image: adguard/adguardhome:edge
+  adguard-home:
+    container_name: adguard-home
+    image: adguard/adguardhome
     restart: unless-stopped
     network_mode: host
     command: "-c /config/config.yml -w /config --no-check-update"
     healthcheck:
       test: "netstat -pant 2>/dev/null | grep AdGuard | grep 53 >/dev/null"
-    environment:
-      <<: *env
     volumes:
       - /opt/appdata/adguardhome:/config
     labels:
@@ -238,8 +308,6 @@ services:
     image: openspeedtest/latest
     container_name: openspeedtest
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "localhost:3000", "-fso", "/dev/null"]
     ports:
       - 9999:3000
     labels:
@@ -264,15 +332,11 @@ services:
     image: portainer/portainer-ce
     container_name: portainer
     restart: always
-#    healthcheck:
-#      test: ["CMD", "wget", "localhost:9000", "-nv", "-t1", "--spider"]
-    environment:
-      TZ: Asia/Kolkata
     ports:
       - 9000:9000
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - /opt/appdata/portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     labels:
       traefik.http.services.portainer.loadbalancer.server.port: 9000 # Multiple ports exposed
       <<: *pullio
@@ -281,9 +345,9 @@ services:
     image: louislam/uptime-kuma
     container_name: uptime-kuma
     restart: unless-stopped
+    logging:
+      driver: none
     volumes:
       - /opt/appdata/uptime-kuma:/app/data
-    environment:
-      <<: *env
     labels:
       <<: *pullio
