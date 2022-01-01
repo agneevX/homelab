@@ -1,3 +1,17 @@
+pilot:
+    token: 
+
+ping: {}
+
+experimental:
+  plugins:
+    rewritebody:
+      moduleName: "github.com/traefik/plugin-rewritebody"
+      version: "v0.3.1"
+ #   souin:
+  #    moduleName: "github.com/darkweak/souin"
+   #   version: "v1.5.10"
+
 api:
   dashboard: true
   insecure: true
@@ -8,8 +22,8 @@ entryPoints:
 
 providers:
   file:
-    filename: "/etc/traefik/file_provider.yml"
+    filename: /etc/traefik/file-provider.yml
     watch: true
 
   docker:
-    defaultRule: "Host(`{{ index .Labels \"com.docker.compose.service\" }}.always-on.nt`)"
+    defaultRule: Host(`{{ index .Labels "com.docker.compose.service" }}.always-on.nt`)

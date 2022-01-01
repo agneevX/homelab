@@ -1,49 +1,46 @@
 http:
   routers:
     oc1-traefik:
-      rule: "HostRegexp(`{subdomain:[a-z]+}.oc1.nt`)"
+      rule: "HostRegexp(`{[a-z]+}.oc1.nt`)"
       service: oc1-traefik
 
     oc2-traefik:
-      rule: "HostRegexp(`{subdomain:[a-z]+}.oc2.nt`)"
-      service: oc2-traefik 
+      rule: "HostRegexp(`{[a-z]+}.oc2.nt`)"
+      service: oc2-traefik
 
     gcp1-traefik:
-      rule: "HostRegexp(`{subdomain:[a-z]+}.gcp1.nt`)"
+      rule: "HostRegexp(`{[a-z]+}.gcp1.nt`)"
       service: gcp1-traefik
 
-    npm:
-      rule: "HostRegexp(`{subdomain:[a-z]+}.always-on.nt`)"
-      service: npm
-      priority: 3
+  middlewares:
 
-    homebridge:
-      rule: "Host(`homebridge.always-on.nt`)"
-      service: homebridge
-      priority: 1
+    adguardhome-themepark:
+      plugin:
+        rewritebody:
+          lastModified: true
+          rewrites:
+            regex: </head>
+            replacement: >
+              <link rel="stylesheet"
+                type="text/css"
+                href="https://theme-park.dev/CSS/themes/adguard/adguard-base.css" >
+              <link rel="stylesheet"
+                type="text/css"
+                href="https://theme-park.dev/CSS/variables/nord.css" >
+              </head>
 
   services:
     oc1-traefik:
       loadBalancer:
         servers:
-          - url: "http://oracle1:82"
+          - url: "http://100.83.6.75:90"
 
     oc2-traefik:
       loadBalancer:
         servers:
-          - url: "http://oc-bom1:82"
+          - url: "http://100.102.123.68:90"
 
     gcp1-traefik:
       loadBalancer:
          servers:
-           - url: "http://gcp1:82"
-
-    npm:
-      loadBalancer:
-        servers:
-          - url: "http://nginx"
-
-    homebridge:
-      loadBalancer:
-        servers:
-          - url: "http://10.0.0.10:8581"
+           - url: "http://gcp1.tailnet-d10c.ts.net:90"
