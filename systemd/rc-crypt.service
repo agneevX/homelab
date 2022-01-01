@@ -13,11 +13,12 @@ Environment=RCLONE_RC_ADDR=0.0.0.0:5801
 Environment=RCLONE_RC_ENABLE_METRICS=true
 
 ExecStart=/usr/bin/rclone mount crypt: /mnt/rc-crypt \
-#	-vv --log-file=/mnt/tmpcache/crypt.log \
-	--vfs-read-chunk-size 64M \
-	--vfs-read-chunk-size-limit 128M \
-	--buffer-size 100M \
-	--rc
+#       -vv --log-file=/mnt/tmpcache/crypt.log \
+        --vfs-cache-mode=writes \
+        --vfs-read-chunk-size=64M \
+        --vfs-read-chunk-size-limit=64M \
+        --buffer-size=70M \
+        --rc
 ExecStartPost=/usr/bin/rclone rc vfs/refresh recursive=true _async=true --rc-addr ${RCLONE_RC_ADDR}
 ExecStop=/bin/fusermount -uz /mnt/rc-crypt
 
