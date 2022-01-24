@@ -41,15 +41,15 @@ I run two Raspberry Pi 4s' as servers currently.
 - 🔊 3.5mm out...
   - Fenda E200 Plus
 
-Main server that runs most of my self-hosted apps and also functions as a NAS.
+Main server that runs the majority of my self-hosted apps, functions as a NAS and audio server using `librespot`, `shairport-sync`, and `mpv`.
 
 Runs (mostly in Docker):
 
 [🔗 **Docker Compose**](./docker-compose/falcon.yml)
 
 - 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
-- 📶 Grafana/Promethus
-- 📽 Plex Media Server
+- � Grafana/Prometheus
+- �📽 Plex Media Server
 - 📺 Sonarr/Radarr
 - 🧲 qBittorrent
 
@@ -66,21 +66,15 @@ Runs (mostly in Docker):
 - 📼 32GB microSD card
 - 🌐 Gigabit ethernet
 
-Functions as the main DNS and DHCP server, while also blocking ads in the network, using AdGuard Home.
+[DNS/DHCP server](#DNS), also handles the Traefik network proxy over Tailscale, more on that below.
 
-For DNS, I use Google DNS, which supports EDNS Client Subnet, which provides faster speeds and a decreased latency for certain CDNs like Akamai or Cloudfront.
-
-Due to the usage of ECS by default, DNS queries are quite slow, so for DNS caching, I use the versatile Unbound.
-
-Since Unbound is limited to DNS over TLS, and I've had issues with DNSSEC failures in the past, I use blocky as upstream, which connects to Google's servers over DNS over HTTPS.
-
-This server also handles the Traefik network proxy over Tailscale. More on that below.
-
-Since this server runs on a SD card, `log2ram` is used to store logs in-memory to reduce writes.
+Since this server runs on a SD card, `log2ram` is used to store certain logs in-memory to reduce writes.
 
 Runs (mostly in Docker):
 
 [🔗 **Docker Compose**](./docker-compose/always-on.yml)
+
+---
 
 ### Cloud VMs
 
@@ -90,16 +84,23 @@ Runs (mostly in Docker):
 
 [🔗 **Docker Compose**](./docker-compose/oracle1.yml)
 
+### DNS
+
+AdGuard Home manages DNS and DHCP, as well as acts as the content-blocker in the network.
+
+I use Google Public DNS using DNS-over-HTTPS as upstreams. Since ECS queries generate more latency, AdGuard is configured to cache DNS queries.
+
+With ECS, I'm able to use my ISP's on-prem Akamai cache as well as low-latency Edge locations in the city.
+
+There's a good [article](https://www.cdnplanet.com/blog/which-cdns-support-edns-client-subnet/) on ECS from CDN Planet.
+
 ## Unified access
 
 I use Tailscale to access all devices and services. All cloud VMs have their storages mounted locally using NFS, securely.
 
-Some self-hosted apps are hosted in cloud to minimize latency, I use Traefik to access them as if they're hosted locally, using the syntax `<service_name>.<machine_name>.nt`.
+Some apps are hosted in cloud to balance system resources. I use Traefik to access them as if they're hosted locally, using the format `http://<app>.<machine>.nt`.
 
-This does require Traefik and *Dockerized* apps on all VMs, with Traefik routers created locally (for each VM) that proxy requests to them.
-VMs not running Docker (due to resource constraints) must be added manually or until I can find a better solution.
-
-This means I'm able to load Jackett, hosted in the `gcp1` VM using the URL `jackett.gcp1.nt`.
+This requires Traefik and containers on all VMs, with Traefik routers created locally (for each VM) that proxy requests to remote Traefik instances.
 
 ## File management
 
