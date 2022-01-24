@@ -6,11 +6,6 @@ x-env: &env
   UMASK: 002
   TZ: Asia/Kolkata
 
-x-labels: &pullio
-  org.hotio.pullio.update: true
-  org.hotio.pullio.notify: true
-  org.hotio.pullio.discord.webhook: ${DISCORD_WEBHOOK}
-
 volumes:
   netdata-lib:
     name: netdata-lib
@@ -23,16 +18,24 @@ networks:
     ipam:
       config:
         - subnet: 172.18.0.0/16
-          gateway: 172.18.0.1
 
   dns:
     name: dns
     ipam:
       config:
         - subnet: 172.19.0.0/16
-          gateway: 172.19.0.1
 
 services:
+
+  scrypted:
+    container_name: scrypted
+    image: koush/scrypted
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /opt/appdata/scrypted:/server/volume
+    labels:
+      traefik.http.services.scrypted.loadbalancer.server.port: 10443
 
   castblock:
     container_name: castblock
@@ -42,8 +45,6 @@ services:
     environment:
       SBCCATEGORIES: sponsor
       SBCYOUTUBEAPIKEY: 
-    labels:
-      <<: *pullio
 
   airconnect:
     container_name: airconnect
@@ -52,8 +53,6 @@ services:
     network_mode: host
     environment:
       ARCH_VAR: aarch64
-    labels:
-      <<: *pullio
 
   vnstat:
     image: vergoh/vnstat
@@ -71,17 +70,31 @@ services:
       - /etc/timezone:/etc/timezone:ro
     labels:
       traefik.http.services.vnstat.loadbalancer.server.port: 7000
-      <<: *pullio
 
-  duckdns:
-    container_name: duckdns
-    image: linuxserver/duckdns
+  vnstat-router:
+    image: vergoh/vnstat
+    container_name: vnstat-router
     restart: unless-stopped
     environment:
-      SUBDOMAINS:
-      TOKEN:
+      SERVER_NAME: orbi
+      LARGE_FONTS: 1
+      HTTP_LOG: /dev/null
+      RUN_VNSTATD: 0
+    volumes:
+      - /mnt/res:/var/lib/vnstat
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     labels:
-      <<: *pullio
+      traefik.http.routers.vnstat-router.rule: Host(`vnstat.router.nt`)
+      
+#  duckdns: 
+#    container_name: duckdns 
+#    image: linuxserver/duckdns
+#    restart: unless-stopped
+#    environment:
+#      SUBDOMAINS: 
+#      TOKEN: 
+#      TZ: Asia/Kolkata
 
   traefik:
     container_name: traefik
@@ -100,45 +113,20 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       traefik.http.routers.traefik.service: api@internal
-      <<: *pullio
 
-  dozzle:
-    container_name: dozzle
-    image: amir20/dozzle
-    restart: unless-stopped
-    ports:
-      - 9990:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      <<: *pullio
-
-  unbound:
-    container_name: unbound
-    image: klutchell/unbound
-    restart: unless-stopped
-    ports:
-      - 127.0.0.1:5053:53/udp
-      - 127.0.0.1:5053:53/tcp
-    volumes:
-      - /opt/appdata/unbound/unbound.conf:/etc/unbound/unbound.conf
-    networks:
-      dns: {}
-    labels:
-      traefik.enable: false
-      <<: *pullio
-
-  unbound2:
-    container_name: unbound-split
-    image: klutchell/unbound
-    restart: unless-stopped
-    volumes:
-      - /opt/appdata/unbound/unbound2.conf:/etc/unbound/unbound.conf
-    networks:
-      dns:
-        ipv4_address: 172.19.0.230
-    labels:
-      traefik.enable: false
+  # unbound:
+  #   container_name: unbound
+  #   image: klutchell/unbound
+  #   restart: unless-stopped
+  #   ports:
+  #     - 127.0.0.1:5053:53/udp
+  #     - 127.0.0.1:5053:53/tcp
+  #   volumes:
+  #     - /opt/appdata/unbound/unbound.conf:/etc/unbound/unbound.conf
+  #   networks:
+  #     dns: {}
+  #   labels:
+  #     traefik.enable: false
 
   blackbox:
     image: prom/blackbox-exporter
@@ -154,8 +142,6 @@ services:
      - 9115:9115
     volumes:
      - /opt/appdata/blackbox:/config
-    labels:
-     <<: *pullio
 
   filebrowser:
     image: filebrowser/filebrowser
@@ -179,44 +165,26 @@ services:
       - /home/agneev:/files/home
       - /opt/appdata:/files/appdata
       - /mnt:/files/mnt
-    labels:
-      <<: *pullio
 
-  blocky-gdns:
-    image: spx01/blocky
-    container_name: blocky-gdns
-    restart: unless-stopped
-    volumes:
-      - /opt/appdata/blocky/blocky-gdns.yml:/app/config.yml
-    networks:
-      dns:
-        ipv4_address: 172.19.0.240
-    labels:
-      <<: *pullio
+#  blocky-gdns:
+#    image: spx01/blocky
+#    container_name: blocky-gdns
+#    restart: unless-stopped
+#    volumes:
+#      - /opt/appdata/blocky/blocky-gdns.yml:/app/config.yml
+#    networks:
+#      dns:
+#        ipv4_address: 172.19.0.240
 
-  blocky-quad9:
-    image: spx01/blocky
-    container_name: blocky-quad9
-    restart: unless-stopped
-    volumes:
-      - /opt/appdata/blocky/blocky-quad9.yml:/app/config.yml
-    networks:
-      dns:
-        ipv4_address: 172.19.0.241
-    labels:
-      <<: *pullio
-
-  blocky-cf:
-    image: spx01/blocky
-    container_name: blocky-cf
-    restart: unless-stopped
-    volumes:
-      - /opt/appdata/blocky/blocky-cf.yml:/app/config.yml
-    networks:
-      dns:
-        ipv4_address: 172.19.0.242
-    labels:
-      <<: *pullio
+#  blocky-quad9:
+#    image: spx01/blocky
+#    container_name: blocky-quad9
+#    restart: unless-stopped
+#    volumes:
+#      - /opt/appdata/blocky/blocky-quad9.yml:/app/config.yml
+#    networks:
+#      dns:
+#        ipv4_address: 172.19.0.241
 
   homer:
     image: b4bz/homer
@@ -231,7 +199,6 @@ services:
       - /opt/appdata/homer:/www/assets
     labels:
       traefik.http.routers.homer.rule: Host(`home.lab`)
-      <<: *pullio
 
   netdata:
     image: netdata/netdata
@@ -264,8 +231,6 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
-    labels:
-      <<: *pullio
 
   speedtest-tracker:
     container_name: speedtest-tracker
@@ -273,8 +238,6 @@ services:
     restart: unless-stopped
     ports:
       - 8700:80
-    healthcheck:
-      test: ["CMD", "curl", "localhost", "-fso", "/dev/null"]
     environment:
       OOKLA_EULA_GDPR: true
       <<: *env
@@ -284,25 +247,33 @@ services:
     volumes:
       - /opt/appdata/speedtest-tracker/app:/config/www/app/Bin
       - /opt/appdata/speedtest-tracker:/config
-    labels:
-      traefik.http.routers.speedtest-tracker.rule: Host(`speedtest.always-on.nt`)
-      <<: *pullio
 
   adguard-home:
     container_name: adguard-home
     image: adguard/adguardhome
     restart: unless-stopped
     network_mode: host
-    command: "-c /config/config.yml -w /config --no-check-update"
+    command: "-c /config/config.yml -w /config --no-check-update --no-etc-hosts"
     healthcheck:
       test: "netstat -pant 2>/dev/null | grep AdGuard | grep 53 >/dev/null"
     volumes:
       - /opt/appdata/adguardhome:/config
     labels:
-      traefik.http.routers.adguardhome.rule: Host(`adguard.always-on.nt`)
       traefik.http.services.adguardhome.loadbalancer.server.port: 3100
       traefik.http.routers.adguardhome.middlewares: adguardhome-themepark@file
-      <<: *pullio
+
+#  dns-cache:
+#    container_name: dns-cache
+#    image: adguard/adguardhome
+#    restart: unless-stopped
+#    command: "-c /config/config.yml -w /config --no-check-update"
+#    ports:
+#      - 127.0.0.1:2000:53/tcp
+#      - 127.0.0.1:2000:53/udp
+#    volumes:
+#      - /opt/appdata/adguardhome-cache:/config
+#    labels:
+#      traefik.enable: false
 
   openspeedtest:
     image: openspeedtest/latest
@@ -310,8 +281,6 @@ services:
     restart: unless-stopped
     ports:
       - 9999:3000
-    labels:
-      <<: *pullio
 
   homebridge:
     image: oznu/homebridge
@@ -326,7 +295,6 @@ services:
       - /opt/appdata/homebridge:/homebridge
     labels:
       traefik.http.services.homebridge.loadbalancer.server.port: 8581
-      <<: *pullio
 
   portainer:
     image: portainer/portainer-ce
@@ -339,7 +307,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       traefik.http.services.portainer.loadbalancer.server.port: 9000 # Multiple ports exposed
-      <<: *pullio
 
   uptime-kuma:
     image: louislam/uptime-kuma
@@ -349,5 +316,3 @@ services:
       driver: none
     volumes:
       - /opt/appdata/uptime-kuma:/app/data
-    labels:
-      <<: *pullio

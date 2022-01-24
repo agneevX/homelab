@@ -6,36 +6,39 @@ x-env: &env
   UMASK: 002
   TZ: Asia/Kolkata
 
-x-labels: &pullio
-  org.hotio.pullio.update: "true"
-  org.hotio.pullio.notify: "true"
-  org.hotio.pullio.discord.webhook: ${DISCORD_WEBHOOK}
-
 services:
 
-  vnstat:
-    image: vergoh/vnstat
-    container_name: vnstat
+  vaultwarden:
+    image: vaultwarden/server
+    container_name: vaultwarden
     restart: unless-stopped
-    network_mode: host
     environment:
-      SERVER_NAME: oracle1
-      HTTP_PORT: 7000
-      LARGE_FONTS: 1
-      HTTP_LOG: /dev/null
+      SIGNUPS_ALLOWED: "false"
+      INVITATIONS_ALLOWED: "false"
     volumes:
-      - /opt/appdata/vnstat:/var/lib/vnstat
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - /opt/appdata/vaultwarden:/data
+#    labels:
+#      traefik.http.routers.vaultwarden.tls: true
 
-  autoheal:
-    container_name: autoheal
-    image: willfarrell/autoheal
-    restart: always
+  jackett:
+    container_name: jackett
+    image: hotio/jackett
+    restart: unless-stopped
+    ports:
+      - 100.83.6.75:9117:9117
     environment:
-      AUTOHEAL_CONTAINER_LABEL: all
+      <<: *env
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/appdata/jackett:/config
+
+  qbit-manage:
+    container_name: qbit-manage
+    image: hotio/qbitmanage
+    environment:
+#      ARGS
+      <<: *env
+    volumes:
+      - /opt/appdata/qbit-manage:/config
 
   plextraktsync:
     container_name: plextraktsync
@@ -50,13 +53,14 @@ services:
       - /logs:size=10m,uid=1001,gid=1001
     volumes:
       - /opt/appdata/plextraktsync:/app/config
-    labels:
-      <<: *pullio
 
   bazarr4k:
     container_name: bazarr4k
     image: linuxserver/bazarr
     restart: unless-stopped
+    extra_hosts:
+      - "radarr4k.falcon.nt:100.120.109.59"
+      - "sonarr4k.falcon.nt:100.120.109.59"
     environment:
       DOCKER_MODS: ghcr.io/gilbn/theme.park:bazarr
       TP_THEME: aquamarine
@@ -64,69 +68,52 @@ services:
     volumes:
       - /opt/appdata/bazarr4k:/config
       - /mnt/mfs-drive:/drive
-    labels:
-      <<: *pullio
 
   traefik:
     container_name: traefik
     image: traefik
     restart: unless-stopped
-    command:
-      - --api.insecure=true
-      - --entrypoints.http.address=:90
-      - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.oc1.nt`)
     ports:
       - 90:90
+      - 443:443
       - 8000:8080
     volumes:
+      - /opt/appdata/traefik:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      <<: *pullio
 
-  dozzle:
-    container_name: dozzle
-    image: amir20/dozzle
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      <<: *pullio
-
-  blocky:
-    image: spx01/blocky
-    container_name: blocky
-    restart: unless-stopped
-    ports:
-      - 1200:53/udp
-    volumes:
-      - /opt/appdata/blocky/blocky.yml:/app/config.yml:ro
-    labels:
-      <<: *pullio
+#  dozzle:
+#    container_name: dozzle
+#    image: amir20/dozzle
+#    restart: unless-stopped
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
 
   unpackerr:
     container_name: unpackerr
     image: hotio/unpackerr
     restart: unless-stopped
+    extra_hosts:
+      - "radarr.falcon.nt:100.120.109.59"
+      - "radarr4k.falcon.nt:100.120.109.59"
+      - "sonarr.falcon.nt:100.120.109.59"
+      - "sonarr4k.falcon.nt:100.120.109.59"
     environment:
       # Sonarr
-      UN_SONARR_0_URL:
-      UN_SONARR_0_API_KEY:
+      UN_SONARR_0_URL: http://sonarr.falcon.nt
+      UN_SONARR_0_API_KEY: 
       # Sonarr4K
-      UN_SONARR_1_URL:
-      UN_SONARR_1_API_KEY:
+      UN_SONARR_1_URL: http://sonarr4k.falcon.nt
+      UN_SONARR_1_API_KEY: 
       # Radarr
-      UN_RADARR_0_URL:
-      UN_RADARR_0_API_KEY:
-      # Radarr4K
-      UN_RADARR_1_URL:
-      UN_RADARR_1_API_KEY:
-      <<: *env
+      UN_RADARR_0_URL: http://radarr.falcon.nt
+      UN_RADARR_0_API_KEY: 
+      # Radarr4k
+      UN_RADARR_1_URL: http://radarr4k.falcon.nt
+      UN_RADARR_1_API_KEY: 
     tmpfs:
       - /config:size=1m
     volumes:
       - /home/ubuntu/drive-local/local/qbt:/drive/local/qbt
-    labels:
-      <<: *pullio
 
   adguard-home:
     container_name: adguard-home
@@ -138,40 +125,42 @@ services:
     volumes:
       - /opt/appdata/adguardhome/workdir:/opt/adguardhome/work
       - /opt/appdata/adguardhome/config:/opt/adguardhome/conf
-    labels:
-      <<: *pullio
 
   prowlarr:
     container_name: prowlarr
-    image: hotio/prowlarr:nightly
+    image: linuxserver/prowlarr:nightly
     restart: unless-stopped
     ports:
-      - 9696:9696
+      - 100.83.6.75:9696:9696
     environment:
-      # TP_THEME: space-gray
+      TP_THEME: dracula
+      DOCKER_MODS: ghcr.io/gilbn/theme.park:prowlarr
       <<: *env
     volumes:
       - /opt/appdata/prowlarr:/config
-    labels:
-      <<: *pullio
 
   overseerr:
     container_name: overseerr
-    image: hotio/overseerr
+    image: hotio/overseerr:nightly
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "localhost:5055", "-fso", "/dev/null"]
+    extra_hosts:
+      - "radarr.falcon.nt:100.120.109.59"
+      - "radarr4k.falcon.nt:100.120.109.59"
+      - "sonarr.falcon.nt:100.120.109.59"
+      - "sonarr4k.falcon.nt:100.120.109.59"
+      - "tautulli.falcon.nt:100.120.109.59"
     environment:
       <<: *env
     volumes:
       - /opt/appdata/overseerr:/config
-    labels:
-      <<: *pullio
 
   bazarr:
     container_name: bazarr
-    image: linuxserver/bazarr:development
+    image: linuxserver/bazarr
     restart: unless-stopped
+    extra_hosts:
+      - "radarr.falcon.nt:100.120.109.59"
+      - "sonarr.falcon.nt:100.120.109.59"
     environment:
       DOCKER_MODS: ghcr.io/gilbn/theme.park:bazarr
       TP_THEME: organizr
@@ -179,19 +168,16 @@ services:
     volumes:
       - /opt/appdata/bazarr:/config
       - /mnt/mfs-drive:/drive
-    labels:
-      <<: *pullio
-
 
   qbittorrent:
     container_name: qbittorrent
-    image: hotio/qflood
+    image: hotio/qflood:release-4.3.9--4.7.0
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "localhost:8080", "-fso", "/dev/null"]
     ports:
-      - 8100:8080
-      - 8101:3000
+      - 100.83.6.75:8100:8080
+      - 100.83.6.75:8101:3000
+      - 32044:32044/tcp
+      - 32044:32044/udp
     environment:
       <<: *env
     volumes:
@@ -199,26 +185,3 @@ services:
       #
       - /home/ubuntu/drive-local/local/qbt:/drive/local/qbt
       - /home/ubuntu/scripts/qbt.sh:/script.sh:ro
-    labels:
-      <<: *pullio
-
-#  petio:
-#    container_name: petio
-#    image: hotio/petio:nightly
-#    restart: unless-stopped
-#    environment:
-#      <<: *env
-#    volumes:
-#      - /opt/appdata/petio:/config
-#    labels:
-#      <<: *pullio
-
-#  mongodb:
-#    container_name: mongodb
-#    image: mongo
-#    user: "1001:1001"
-#    volumes:
-#      - /opt/appdata/mongodb/configdb:/data/configdb
-#      - /opt/appdata/mongodb/data:/data/db
-#    labels:
-#      <<: *pullio

@@ -38,6 +38,7 @@ colors:
     link-hover: "#ffdd57"
 
 links:
+
   - icon: far fa-edit
     url: http://filebrowser.always-on.nt/files/appdata/homer/config.yml
     target: _blank
@@ -50,19 +51,14 @@ links:
     icon: fab fa-docker
     url: http://filebrowser.always-on.nt/files/home/compose.yml
     target: _blank
-
     
-  #- icon: fas fa-file-download
-#    url: http://torrent.always-on.nt
-#    target: _blank
-    
-#   - icon: fas fa-project-diagram
-#     url: http://npm.always-on.nt
- #   target: _blank
+  - icon: fas fa-network-wired
+    url: http://vnstat.falcon.nt
+    target: _blank
     
   - name: 2
     icon: fas fa-folder-open
-    url: http://filebrowser.always-on.nt/files"
+    url: http://filebrowser.always-on.nt/files
     target: _blank
     
   - name: 2
@@ -75,8 +71,13 @@ links:
     url: http://traefik.always-on.nt
     target: _blank
     
-  - icon: fas fa-fire
-    url: http://prometheus.falcon.nt
+#   - icon: fas fa-fire
+#     url: http://prometheus.falcon.nt
+#     target: _blank
+    
+  - name: 2
+    icon: fas fa-network-wired
+    url: http://vnstat.always-on.nt
     target: _blank
     
   - icon: fas fa-wifi
@@ -96,10 +97,10 @@ links:
     url: http://qbittorrent.oc2.nt
     target: _blank
     
-  - name: 4K
-    icon: fas fa-closed-captioning
-    url: http://bazarr4k.oc1.nt
-    target: _blank
+#   - name: 4K
+#     icon: fas fa-closed-captioning
+#     url: http://bazarr4k.oc1.nt
+#     target: _blank
     
 #  - name: "Page 2"
 #    icon: "fas fa-columns"
@@ -117,7 +118,7 @@ services:
         target: _blank
     
       - name: Radarr
-        subtitle: Movie collection manager
+        subtitle: Manage HD movies
         url: http://radarr.falcon.nt
         logo: ./assets/homer-icons/png/radarr.png
         target: _blank
@@ -129,13 +130,13 @@ services:
         target: _blank
 
       - name: Sonarr
-        subtitle: TV shows automator
+        subtitle: Manage HD TV Shows
         url: http://sonarr.falcon.nt
         logo: ./assets/homer-icons/svg/sonarr.svg
         target: _blank
 
       - name: Sonarr4K
-        subtitle: Automate 4K TV shows
+        subtitle: Manage 4K TV Shows
         url: http://sonarr4k.falcon.nt
         logo: ./assets/custom/sonarr4k.png
         target: _blank
@@ -146,9 +147,21 @@ services:
         logo: ./assets/homer-icons/png/plex.png
         target: _blank
 
+      - name: Bazarr
+        subtitle: Subtitles for HD media
+        url: http://bazarr.oc1.nt
+        logo: ./assets/homer-icons/svg/bazarr.svg
+        target: _blank
+
   - name: Applications
-    icon: "fas fa-rocket"
+    icon: fas fa-rocket
     items:
+
+      - name: ArchiveBox
+        subtitle: Archive websites with ease
+        url: http://archivebox.falcon.nt/admin/core/snapshot/
+        logo: ./assets/homer-icons/png/archivebox.png
+        target: _blank
 
       - name: Code-server
         subtitle: Write code in browser
@@ -157,13 +170,13 @@ services:
         target: _blank
 
       - name: Grafana
-        subtitle: Visualized metrics
+        subtitle: Visualize metrics
         url: http://grafana.falcon.nt
         logo: ./assets/homer-icons/png/grafana.png
         target: _blank
 
       - name: Tautulli
-        subtitle: Plex, graphed
+        subtitle: Statistics for Plex
         url: http://tautulli.falcon.nt
         logo: ./assets/homer-icons/png/tautulli.png
         target: _blank
@@ -187,13 +200,19 @@ services:
         target: _blank
         
   - name: Manage
-    icon: "fas fa-user-shield"
+    icon: fas fa-user-shield
     items:
 
       - name: Portainer
         subtitle: Advanced Docker GUI
         url: http://portainer.always-on.nt
         logo: ./assets/homer-icons/png/portainer.png
+        target: _blank
+
+      - name: pgAdmin
+        subtitle: PostgreSQL admin GUI
+        url: http://pgadmin.falcon.nt
+        logo: ./assets/homer-icons/png/pgadmin.png
         target: _blank
 
       - name: Dozzle
@@ -203,7 +222,7 @@ services:
         target: _blank
         
       - name: Traefik
-        subtitle: Docker proxy
+        subtitle: Docker network proxy
         url: http://traefik.falcon.nt/dashboard/
         logo: ./assets/homer-icons/png/traefik.png
         target: _blank
@@ -219,17 +238,17 @@ services:
         target: _blank
     
       - name: Yacht
-        subtitle: Manage Docker host
+        subtitle: Material UI Docker manager
         url: http://yacht.falcon.nt
         logo: ./assets/homer-icons/png/yacht.png
         target: _blank
 
-  - name: "Network"
-    icon: "fas fa-project-diagram"
+  - name: Network
+    icon: fas fa-project-diagram
     items:
 
       - name: AdGuard Home
-        subtitle: Network DNS/DHCP/ad-blocker
+        subtitle: Network DNS/DHCP server
         url: http://adguard.always-on.nt
         logo: ./assets/homer-icons/svg/adguardhome.svg
         target: _blank
@@ -245,6 +264,11 @@ services:
         url: http://routerlogin.net:19999/#menu_net_submenu_eth0;theme=slate;help=false
         logo: ./assets/homer-icons/png/netdata.png
         target: _blank
+        
+      - name: Router vnstat
+        subtitle: Internet usage graphs
+        url: http://vnstat.router.nt
+        target: _blank
     
       - name: Uptime-kuma
         subtitle: Service monitoring
@@ -258,7 +282,7 @@ services:
         logo: ./assets/homer-icons/png/openspeedtest.png
         target: _blank
 
-  - name: Downloads
+  - name: Files
     icon: fas fa-server
     items:
 
@@ -267,17 +291,17 @@ services:
         url: http://files.falcon.nt
         logo: ./assets/homer-icons/svg/filebrowser.svg
         target: _blank
+        
+      - name: aria2
+        subtitle: HTTP downloader
+        url: http://aria2.falcon.nt
+        logo: ./assets/homer-icons/png/ariang.png
+        target: _blank
 
       - name: Flood
         subtitle: Next-gen torrent GUI
         url: http://flood.falcon.nt
         logo: ./assets/homer-icons/png/flood.png
-        target: _blank
-        
-      - name: aria2
-        subtitle: HTTP downloader
-        url: http://aria.falcon.nt
-        logo: ./assets/homer-icons/png/ariang.png
         target: _blank
 
       - name: qBittorrent
@@ -286,26 +310,44 @@ services:
         logo: ./assets/homer-icons/png/qbittorrent.png
         target: _blank
 
+      - name: Duplicacy
+        subtitle: Incremental backups
+        url: http://duplicacy.falcon.nt
+        logo: ./assets/homer-icons/png/duplicacy.png
+        target: _blank
+
+    #   - name: Syncthing
+    #     subtitle: Effortless files syncing
+    #     url: http://syncthing.falcon.nt
+    #     logo: ./assets/homer-icons/png/syncthing.png
+    #     target: _blank
+    
+    #   - name: Stash
+    #     subtitle: Your special media files
+    #     logo: ./assets/homer-icons/png/stash.png
+    #     url: "http://stash.falcon.nt/scenes/?c={%22type%22:%22title%22,%22value%22:%22(compilation|best\\%20of)%22,%22modifier%22:%22NOT_MATCHES_REGEX%22}&perPage=30&sortby=random&sortdir=desc"
+    #     target: _blank
+
+  - name: Tools
+    icon: fas fa-toolbox
+    items:
+
       - name: Prowlarr
         subtitle: Indexer manager
         url: http://prowlarr.oc1.nt
         logo: ./assets/homer-icons/svg/prowlarr.svg
         target: _blank
 
-  - name: Tools
-    icon: fas fa-toolbox
-    items:
-
       - name: Scrutiny
         subtitle: Visualized SMART data
         url: http://scrutiny.falcon.nt
         logo: ./assets/homer-icons/png/scrutiny.png
         target: _blank
-
-      - name: ArchiveBox
-        subtitle: Archive websites with ease
-        url: http://archivebox.falcon.nt/admin/core/snapshot/
-        logo: ./assets/homer-icons/png/archivebox.png
+        
+      - name: Prometheus
+        subtitle: Metrics collector
+        url: http://prometheus.falcon.nt
+        logo: ./assets/homer-icons/png/prometheus.png
         target: _blank
 
       - name: Node-RED
@@ -314,15 +356,15 @@ services:
         logo: ./assets/homer-icons/png/nodered.png
         target: _blank
 
-      - name: Bazarr
-        subtitle: Subtitles for all media
-        url: http://bazarr.oc1.nt
+      - name: Bazarr4K
+        subtitle: Subtitles for 4K media
+        url: http://bazarr4k.oc1.nt
         logo: ./assets/homer-icons/svg/bazarr.svg
         target: _blank
 
       - name: Jackett
         subtitle: All indexers in one place
-        url: http://jackett.gcp1.nt
+        url: http://jackett.oc1.nt
         logo: ./assets/homer-icons/png/jackett.png
         target: _blank
 
