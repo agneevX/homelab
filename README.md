@@ -53,8 +53,6 @@ Runs (mostly in Docker):
 - 📺 Sonarr/Radarr
 - 🧲 qBittorrent
 
----
-
 ### DNS/proxy server
 
 <img src="https://www.raspberrypi.com/app/uploads/2021/04/raspberrypi4-hero2-1536x1021.png" width="300">
@@ -74,8 +72,6 @@ Runs (mostly in Docker):
 
 [🔗 **Docker Compose**](./docker-compose/always-on.yml)
 
----
-
 ### Cloud VMs
 
 - Oracle Cloud (A1 Compute)
@@ -84,15 +80,15 @@ Runs (mostly in Docker):
 
 [🔗 **Docker Compose**](./docker-compose/oracle1.yml)
 
+---
+
 ### DNS
 
-AdGuard Home manages DNS and DHCP, as well as acts as the content-blocker in the network.
+[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) manages DNS and DHCP, as well as acts as the content-blocker in the network.
 
-I use Google Public DNS using DNS-over-HTTPS as upstreams. Since ECS queries generate more latency, AdGuard is configured to cache DNS queries.
+I use Google Public DNS, Cloudflare using DNS-over-HTTPS as well as ISP's DNS servers using several applications like [Unbound](https://github.com/NLnetLabs/unbound), [blocky](https://github.com/0xERR0R/blocky) and [smartdns](https://github.com/agneevX/smartdns).
 
-With ECS, I'm able to use my ISP's on-prem Akamai cache as well as low-latency Edge locations in the city.
-
-There's a good [article](https://www.cdnplanet.com/blog/which-cdns-support-edns-client-subnet/) on ECS from CDN Planet.
+![dns mess](https://user-images.githubusercontent.com/19761269/154685512-caeae648-3a99-43b1-817a-2ffd4d1cae3f.png)
 
 ## Unified access
 
