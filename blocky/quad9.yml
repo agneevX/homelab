@@ -1,0 +1,6 @@
+logLevel: fatal
+
+upstream:
+  default:
+    - https://9.9.9.11/dns-query
+    - https://149.112.112.11/dns-query

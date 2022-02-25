@@ -27,15 +27,164 @@ networks:
 
 services:
 
-  scrypted:
-    container_name: scrypted
-    image: koush/scrypted
+##### ----- DNS services ----- #####
+
+  bind:
+    container_name: bind
+    image: ubuntu/bind9
+    restart: unless-stopped
+    networks:
+      dns: {}
+    ports:
+      - 127.0.0.1:6053:53/tcp
+      - 127.0.0.1:6053:53/udp
+    volumes:
+      - /opt/appdata/bind/conf:/etc/bind/named.conf
+
+  adguard-home:
+    container_name: adguard-home
+    image: adguard/adguardhome:edge
     restart: unless-stopped
     network_mode: host
+    command: "--config /config/config.yml --work-dir /tmp --no-etc-hosts --no-check-update"
     volumes:
-      - /opt/appdata/scrypted:/server/volume
+      - /opt/appdata/adguardhome:/config
     labels:
-      traefik.http.services.scrypted.loadbalancer.server.port: 10443
+      traefik.http.services.adguardhome.loadbalancer.server.port: 3000
+      traefik.http.routers.adguardhome.middlewares: adguardhome-themepark@file
+
+  agh2:
+    container_name: adguard-home2
+    image: adguard/adguardhome:edge
+    restart: unless-stopped
+    command: "--config /config/test.yml --work-dir /tmp --no-etc-hosts --no-check-update"
+    ports:
+      - 3200:3000
+      - 1400:53/udp
+    volumes:
+      - /opt/appdata/adguardhome:/config
+
+  alliance-dns:
+    container_name: alliance-dns
+    image: adguard/adguardhome:edge
+    restart: unless-stopped
+    command: "--config /config/config.yml --work-dir /config --no-etc-hosts --no-check-update"
+    networks:
+      dns:
+        ipv4_address: 172.19.0.20
+    ports:
+      - 3100:3000
+      - 127.0.0.1:1400:53/udp
+    volumes:
+      - /opt/appdata/adguard-alliancedns:/config
+    labels:
+      traefik.http.services.alliance-dns.loadbalancer.server.port: 3000
+
+  dnsmasq:
+    container_name: dnsmasq
+    image: ricardbejarano/dnsmasq
+    restart: unless-stopped
+    command:
+#      - --add-subnet=0.0.0.0/0
+#      - --server=172.19.0.240
+      - --server=100.102.123.68#1100
+      - --cache-size=0
+      - --no-resolv
+      - --port=1053
+      - --keep-in-foreground
+    networks:
+      dns: {}
+    ports:
+      - 1053:1053/tcp
+      - 1053:1053/udp
+
+  google-dns:
+    image: spx01/blocky
+    container_name: google-dns
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Kolkata
+    networks:
+      dns:
+        ipv4_address: 172.19.0.10
+    volumes:
+      - /opt/appdata/blocky/google-dns.yml:/app/config.yml
+
+  blocky-alliancedns:
+    image: spx01/blocky
+    container_name: blocky-alliancedns
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Kolkata
+    volumes:
+      - /opt/appdata/blocky/alliance-dns.yml:/app/config.yml
+    networks:
+      dns:
+        ipv4_address: 172.19.0.243
+
+  blocky-cf:
+    image: spx01/blocky
+    container_name: blocky-cf
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Kolkata
+    ports:
+      - 10.0.0.10:1053:53/udp
+    volumes:
+      - /opt/appdata/blocky/cloudflare.yml:/app/config.yml
+    networks:
+      dns:
+        ipv4_address: 172.19.0.248
+
+  unbound:
+    container_name: unbound
+    image: klutchell/unbound
+    restart: unless-stopped
+    networks:
+      dns: {}
+    ports:
+      - 127.0.0.1:5053:53/udp
+      - 127.0.0.1:5053:53/tcp
+    volumes:
+      - /opt/appdata/unbound/unbound-aka.conf:/etc/unbound/unbound.conf
+    labels:
+      traefik.enable: false
+
+#  dnscrypt:
+#    image: gists/dnscrypt-proxy
+#    container_name: dnscrypt-proxy
+#    restart: unless-stopped
+#    network:
+#      dns: {}
+#    ports:
+#      - 127.0.0.1:5353:5353/tcp
+#      - 127.0.0.1:5353:5353/udp
+#    volumes:
+#      - /opt/appdata/dnscrypt-proxy/config.toml:/etc/dnscrypt-proxy/dnscrypt-proxy.toml
+
+  smartdns:
+    image: agneev/smartdns
+    container_name: smartdns
+    restart: unless-stopped
+    networks:
+      dns:
+        ipv4_address: 172.19.0.40
+    ports:
+      - 127.0.0.1:1053:53/udp
+      - 127.0.0.1:1053:53/tcp
+    volumes:
+      - /opt/appdata/smartdns:/config
+
+##### -------------------- #####
+
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle
+    restart: always
+    ports:
+      - 8888:8888
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
   castblock:
     container_name: castblock
@@ -44,7 +193,6 @@ services:
     network_mode: host
     environment:
       SBCCATEGORIES: sponsor
-      SBCYOUTUBEAPIKEY: 
 
   airconnect:
     container_name: airconnect
@@ -92,20 +240,22 @@ services:
 #    image: linuxserver/duckdns
 #    restart: unless-stopped
 #    environment:
-#      SUBDOMAINS: 
-#      TOKEN: 
 #      TZ: Asia/Kolkata
 
   traefik:
     container_name: traefik
-    image: traefik:v2.5.6
+    image: traefik:v2.6.0
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
+  #  healthcheck:
+  #    test: ["CMD", "traefik", "healthcheck"]
     extra_hosts:
       - "host.docker.internal:10.0.0.10"
+    networks:
+      default: {}
+      dns: {}
     ports:
       - 80:80
+      - 8000:8080
     environment:
       <<: *env
     volumes:
@@ -114,49 +264,37 @@ services:
     labels:
       traefik.http.routers.traefik.service: api@internal
 
-  # unbound:
-  #   container_name: unbound
-  #   image: klutchell/unbound
-  #   restart: unless-stopped
-  #   ports:
-  #     - 127.0.0.1:5053:53/udp
-  #     - 127.0.0.1:5053:53/tcp
-  #   volumes:
-  #     - /opt/appdata/unbound/unbound.conf:/etc/unbound/unbound.conf
-  #   networks:
-  #     dns: {}
-  #   labels:
-  #     traefik.enable: false
-
   blackbox:
     image: prom/blackbox-exporter
     container_name: blackbox
-    hostname: blackbox
     restart: unless-stopped
+#    hostname: blackbox
+    network_mode: host
     command:
      - --log.level=warn
      - --config.file=/config/config.yml
     cap_add:
      - CAP_NET_RAW
-    ports:
-     - 9115:9115
+#    ports:
+#     - 9115:9115
     volumes:
      - /opt/appdata/blackbox:/config
+#    labels:
+#      traefik.enable: false
 
   filebrowser:
     image: filebrowser/filebrowser
     container_name: filebrowser
     restart: unless-stopped
     user: "1001:1001"
-    command:
-      - --disable-exec
-      - --disable-type-detection-by-header
-      - --disable-preview-resize
-      - --disable-thumbnails
     environment:
       FB_ROOT: /files
       FB_CONFIG: /config/config.json
       FB_DATABASE: /config/filebrowser.db
+      FB_DISABLE-EXEC: true
+      FB_DISABLE-TYPE-DETECTION-BY-HEADER: true
+      FB_DISABLE-PREVIEW-RESIZE: true
+      FB_DISABLE-THUMBNAILS: true
     tmpfs:
       - /srv:size=1m
     volumes:
@@ -165,26 +303,6 @@ services:
       - /home/agneev:/files/home
       - /opt/appdata:/files/appdata
       - /mnt:/files/mnt
-
-#  blocky-gdns:
-#    image: spx01/blocky
-#    container_name: blocky-gdns
-#    restart: unless-stopped
-#    volumes:
-#      - /opt/appdata/blocky/blocky-gdns.yml:/app/config.yml
-#    networks:
-#      dns:
-#        ipv4_address: 172.19.0.240
-
-#  blocky-quad9:
-#    image: spx01/blocky
-#    container_name: blocky-quad9
-#    restart: unless-stopped
-#    volumes:
-#      - /opt/appdata/blocky/blocky-quad9.yml:/app/config.yml
-#    networks:
-#      dns:
-#        ipv4_address: 172.19.0.241
 
   homer:
     image: b4bz/homer
@@ -216,9 +334,9 @@ services:
     ports:
       - 19999:19999
     environment:
-      NETDATA_CLAIM_TOKEN: $NETDATA_CLAIM_TOKEN
+      NETDATA_CLAIM_TOKEN: ${NETDATA_CLAIM_TOKEN}
       NETDATA_CLAIM_URL: https://app.netdata.cloud
-      NETDATA_CLAIM_ROOMS: $NETDATA_CLAIM_ROOMS
+      NETDATA_CLAIM_ROOMS: ${NETDATA_CLAIM_ROOMS}
       PGID: 1001
     volumes:
       - /opt/appdata/netdata:/etc/netdata
@@ -248,33 +366,6 @@ services:
       - /opt/appdata/speedtest-tracker/app:/config/www/app/Bin
       - /opt/appdata/speedtest-tracker:/config
 
-  adguard-home:
-    container_name: adguard-home
-    image: adguard/adguardhome
-    restart: unless-stopped
-    network_mode: host
-    command: "-c /config/config.yml -w /config --no-check-update --no-etc-hosts"
-    healthcheck:
-      test: "netstat -pant 2>/dev/null | grep AdGuard | grep 53 >/dev/null"
-    volumes:
-      - /opt/appdata/adguardhome:/config
-    labels:
-      traefik.http.services.adguardhome.loadbalancer.server.port: 3100
-      traefik.http.routers.adguardhome.middlewares: adguardhome-themepark@file
-
-#  dns-cache:
-#    container_name: dns-cache
-#    image: adguard/adguardhome
-#    restart: unless-stopped
-#    command: "-c /config/config.yml -w /config --no-check-update"
-#    ports:
-#      - 127.0.0.1:2000:53/tcp
-#      - 127.0.0.1:2000:53/udp
-#    volumes:
-#      - /opt/appdata/adguardhome-cache:/config
-#    labels:
-#      traefik.enable: false
-
   openspeedtest:
     image: openspeedtest/latest
     container_name: openspeedtest
@@ -287,8 +378,6 @@ services:
     container_name: homebridge
     restart: unless-stopped
     network_mode: host
-    healthcheck:
-      test: ["CMD", "curl", "localhost:8581", "-fso", "/dev/null"]
     environment:
       <<: *env
     volumes:
