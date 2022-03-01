@@ -138,13 +138,15 @@ services:
 
   unbound:
     container_name: unbound
-    image: klutchell/unbound
+    image: crazymax/unbound
     restart: unless-stopped
     networks:
       dns: {}
     ports:
-      - 127.0.0.1:5053:53/udp
-      - 127.0.0.1:5053:53/tcp
+      - 127.0.0.1:5053:5053/udp
+      - 127.0.0.1:5053:5053/tcp
+    tmpfs:
+      - /config:size=1m
     volumes:
       - /opt/appdata/unbound/unbound-aka.conf:/etc/unbound/unbound.conf
     labels:
