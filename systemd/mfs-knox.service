@@ -1,5 +1,5 @@
 [Unit]
-Description=mergerFS /mnt/pool ext. drives mount
+Description = mergerFS /mnt/pool ext. drives mount
 
 [Service]
 Type=forking

@@ -53,17 +53,6 @@ services:
       traefik.http.services.adguardhome.loadbalancer.server.port: 3000
       traefik.http.routers.adguardhome.middlewares: adguardhome-themepark@file
 
-  agh2:
-    container_name: adguard-home2
-    image: adguard/adguardhome:edge
-    restart: unless-stopped
-    command: "--config /config/test.yml --work-dir /tmp --no-etc-hosts --no-check-update"
-    ports:
-      - 3200:3000
-      - 1400:53/udp
-    volumes:
-      - /opt/appdata/adguardhome:/config
-
   alliance-dns:
     container_name: alliance-dns
     image: adguard/adguardhome:edge
@@ -116,11 +105,11 @@ services:
     restart: unless-stopped
     environment:
       TZ: Asia/Kolkata
-    volumes:
-      - /opt/appdata/blocky/alliance-dns.yml:/app/config.yml
     networks:
       dns:
         ipv4_address: 172.19.0.243
+    volumes:
+      - /opt/appdata/blocky/alliance-dns.yml:/app/config.yml
 
   blocky-cf:
     image: spx01/blocky

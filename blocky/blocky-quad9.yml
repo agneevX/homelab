@@ -1,5 +1,0 @@
-logLevel: fatal
-
-upstream:
-  default:
-    - https://9.9.9.11/dns-query
