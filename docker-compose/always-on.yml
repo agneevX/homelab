@@ -29,24 +29,24 @@ services:
 
 ##### ----- DNS services ----- #####
 
-  bind:
-    container_name: bind
-    image: ubuntu/bind9
-    restart: unless-stopped
-    networks:
-      dns: {}
-    ports:
-      - 127.0.0.1:6053:53/tcp
-      - 127.0.0.1:6053:53/udp
-    volumes:
-      - /opt/appdata/bind/conf:/etc/bind/named.conf
+  # bind:
+  #   container_name: bind
+  #   image: ubuntu/bind9
+  #   restart: unless-stopped
+  #   networks:
+  #     dns: {}
+  #   ports:
+  #     - 127.0.0.1:6053:53/tcp
+  #     - 127.0.0.1:6053:53/udp
+  #   volumes:
+  #     - /opt/appdata/bind/conf:/etc/bind/named.conf
 
   adguard-home:
     container_name: adguard-home
-    image: adguard/adguardhome:edge
+    image: adguard/adguardhome
     restart: unless-stopped
     network_mode: host
-    command: "--config /config/config.yml --work-dir /tmp --no-etc-hosts --no-check-update"
+    command: "--config /config/config.yml --work-dir /config --no-etc-hosts --no-check-update"
     volumes:
       - /opt/appdata/adguardhome:/config
     labels:
@@ -55,9 +55,9 @@ services:
 
   alliance-dns:
     container_name: alliance-dns
-    image: adguard/adguardhome:edge
+    image: adguard/adguardhome
     restart: unless-stopped
-    command: "--config /config/config.yml --work-dir /config --no-etc-hosts --no-check-update"
+    command: "--config /config/config.yml --work-dir /config --no-check-update"
     networks:
       dns:
         ipv4_address: 172.19.0.20
@@ -68,24 +68,6 @@ services:
       - /opt/appdata/adguard-alliancedns:/config
     labels:
       traefik.http.services.alliance-dns.loadbalancer.server.port: 3000
-
-  dnsmasq:
-    container_name: dnsmasq
-    image: ricardbejarano/dnsmasq
-    restart: unless-stopped
-    command:
-#      - --add-subnet=0.0.0.0/0
-#      - --server=172.19.0.240
-      - --server=100.102.123.68#1100
-      - --cache-size=0
-      - --no-resolv
-      - --port=1053
-      - --keep-in-foreground
-    networks:
-      dns: {}
-    ports:
-      - 1053:1053/tcp
-      - 1053:1053/udp
 
   google-dns:
     image: spx01/blocky
@@ -98,32 +80,6 @@ services:
         ipv4_address: 172.19.0.10
     volumes:
       - /opt/appdata/blocky/google-dns.yml:/app/config.yml
-
-  blocky-alliancedns:
-    image: spx01/blocky
-    container_name: blocky-alliancedns
-    restart: unless-stopped
-    environment:
-      TZ: Asia/Kolkata
-    networks:
-      dns:
-        ipv4_address: 172.19.0.243
-    volumes:
-      - /opt/appdata/blocky/alliance-dns.yml:/app/config.yml
-
-  blocky-cf:
-    image: spx01/blocky
-    container_name: blocky-cf
-    restart: unless-stopped
-    environment:
-      TZ: Asia/Kolkata
-    ports:
-      - 10.0.0.10:1053:53/udp
-    volumes:
-      - /opt/appdata/blocky/cloudflare.yml:/app/config.yml
-    networks:
-      dns:
-        ipv4_address: 172.19.0.248
 
   unbound:
     container_name: unbound
@@ -153,18 +109,18 @@ services:
 #    volumes:
 #      - /opt/appdata/dnscrypt-proxy/config.toml:/etc/dnscrypt-proxy/dnscrypt-proxy.toml
 
-  smartdns:
-    image: agneev/smartdns
-    container_name: smartdns
-    restart: unless-stopped
-    networks:
-      dns:
-        ipv4_address: 172.19.0.40
-    ports:
-      - 127.0.0.1:1053:53/udp
-      - 127.0.0.1:1053:53/tcp
-    volumes:
-      - /opt/appdata/smartdns:/config
+  # smartdns:
+  #   image: agneev/smartdns
+  #   container_name: smartdns
+  #   restart: unless-stopped
+  #   networks:
+  #     dns:
+  #       ipv4_address: 172.19.0.40
+  #   ports:
+  #     - 127.0.0.1:1053:53/udp
+  #     - 127.0.0.1:1053:53/tcp
+  #   volumes:
+  #     - /opt/appdata/smartdns:/config
 
 ##### -------------------- #####
 
