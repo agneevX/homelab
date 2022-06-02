@@ -24,7 +24,7 @@ I run two Raspberry Pi 4s' as servers currently.
 `falcon`
 
 - ⚡ Raspberry Pi 4 (8GB model)
-  - Ubuntu Server 20.04 LTS
+  - Ubuntu Server 22.04 LTS
   - Overclocked to 2.0GHz
 - 🔌 Powered USB 3.0 hub
   - TP-Link TL-UH700
