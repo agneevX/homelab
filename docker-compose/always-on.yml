@@ -1,16 +1,15 @@
-version: '3.9'
-
 x-env: &env
   PGID: 1001
   PUID: 1001
   UMASK: 002
   TZ: Asia/Kolkata
+  
+x-timezone: &tz
+  TZ: Asia/Kolkata
 
-volumes:
-  netdata-lib:
-    name: netdata-lib
-  netdata-cache:
-    name: netdata-cache
+x-logging: &log
+  logging:
+    driver: journald
 
 networks:
   default:
@@ -29,117 +28,142 @@ services:
 
 ##### ----- DNS services ----- #####
 
-  # bind:
-  #   container_name: bind
-  #   image: ubuntu/bind9
-  #   restart: unless-stopped
-  #   networks:
-  #     dns: {}
-  #   ports:
-  #     - 127.0.0.1:6053:53/tcp
-  #     - 127.0.0.1:6053:53/udp
-  #   volumes:
-  #     - /opt/appdata/bind/conf:/etc/bind/named.conf
-
   adguard-home:
     container_name: adguard-home
-    image: adguard/adguardhome
+    image: adguard/adguardhome:v0.107.8
     restart: unless-stopped
+    <<: *log
     network_mode: host
-    command: "--config /config/config.yml --work-dir /config --no-etc-hosts --no-check-update"
-    volumes:
-      - /opt/appdata/adguardhome:/config
-    labels:
-      traefik.http.services.adguardhome.loadbalancer.server.port: 3000
-      traefik.http.routers.adguardhome.middlewares: adguardhome-themepark@file
-
-  alliance-dns:
-    container_name: alliance-dns
-    image: adguard/adguardhome
-    restart: unless-stopped
     command: "--config /config/config.yml --work-dir /config --no-check-update"
-    networks:
-      dns:
-        ipv4_address: 172.19.0.20
-    ports:
-      - 3100:3000
-      - 127.0.0.1:1400:53/udp
-    volumes:
-      - /opt/appdata/adguard-alliancedns:/config
-    labels:
-      traefik.http.services.alliance-dns.loadbalancer.server.port: 3000
-
-  google-dns:
-    image: spx01/blocky
-    container_name: google-dns
-    restart: unless-stopped
     environment:
-      TZ: Asia/Kolkata
+      <<: *tz
+    volumes:
+      - /opt/appdata/adguard-home:/config
+    labels:
+      traefik.enable: true
+      traefik.http.routers.adguard-home.rule: Host(`dns.nt`)
+      traefik.http.routers.adguard-home.middlewares: adguardhome-themepark@file
+      traefik.http.services.adguard-home.loadbalancer.server.port: 3000
+
+  dns-cache:
+    container_name: dns-cache
+    image: hezhijie0327/dnsproxy
+    restart: unless-stopped
+    command:
+      - --cache
+      - --cache-optimistic
+      - --cache-size=64000000
+      - --upstream=172.19.0.10
+    networks:
+      - dns
+    ports:
+      - 127.0.0.1:8888:53/tcp
+      - 127.0.0.1:8888:53/udp
+
+  cloudflare-dns:
+    container_name: cloudflare-dns
+    image: hezhijie0327/dnsproxy
+    restart: unless-stopped
+    command:
+      - --upstream=https://xxx.cloudflare-gateway.com/dns-query
+      - --bootstrap=8.8.8.8
+    ports:
+      - 127.0.0.1:1153:53/udp
+    environment:
+      <<: *tz
     networks:
       dns:
         ipv4_address: 172.19.0.10
-    volumes:
-      - /opt/appdata/blocky/google-dns.yml:/app/config.yml
-
-  unbound:
-    container_name: unbound
-    image: crazymax/unbound
-    restart: unless-stopped
-    networks:
-      dns: {}
-    ports:
-      - 127.0.0.1:5053:5053/udp
-      - 127.0.0.1:5053:5053/tcp
-    tmpfs:
-      - /config:size=1m
-    volumes:
-      - /opt/appdata/unbound/unbound-aka.conf:/etc/unbound/unbound.conf
-    labels:
-      traefik.enable: false
-
-#  dnscrypt:
-#    image: gists/dnscrypt-proxy
-#    container_name: dnscrypt-proxy
-#    restart: unless-stopped
-#    network:
-#      dns: {}
-#    ports:
-#      - 127.0.0.1:5353:5353/tcp
-#      - 127.0.0.1:5353:5353/udp
-#    volumes:
-#      - /opt/appdata/dnscrypt-proxy/config.toml:/etc/dnscrypt-proxy/dnscrypt-proxy.toml
-
-  # smartdns:
-  #   image: agneev/smartdns
-  #   container_name: smartdns
-  #   restart: unless-stopped
-  #   networks:
-  #     dns:
-  #       ipv4_address: 172.19.0.40
-  #   ports:
-  #     - 127.0.0.1:1053:53/udp
-  #     - 127.0.0.1:1053:53/tcp
-  #   volumes:
-  #     - /opt/appdata/smartdns:/config
 
 ##### -------------------- #####
+
+  homepage:
+    container_name: homepage
+    image: ghcr.io/benphelps/homepage:main
+    restart: unless-stopped
+    <<: *log
+    volumes:
+      - /opt/appdata/homepage:/app/config
+    labels:
+      traefik.enable: true
+      traefik.name: home
+
+  dash.:
+    container_name: dash.
+    image: mauricenino/dashdot
+    restart: unless-stopped
+    privileged: true
+    environment:
+      DASHDOT_ENABLE_CPU_TEMPS: true
+      DASHDOT_ENABLE_STORAGE_SPLIT_VIEW: true
+      DASHDOT_ALWAYS_SHOW_PERCENTAGES: true
+      DASHDOT_RAM_LABEL_LIST: size,type,frequency
+      DASHDOT_ACCEPT_OOKLA_EULA: true
+    ports:
+      - 81:3001
+    volumes:
+      - /:/mnt/host:ro
+    labels:
+      traefik.enable: true
+      traefik.name: sys
+
+  smokeping:
+    container_name: smokeping
+    image: linuxserver/smokeping
+    restart: unless-stopped
+    <<: *log
+    environment:
+      <<: *env
+    volumes:
+      - /opt/appdata/smokeping/config:/config
+      - /var/log/appdata/smokeping/data:/data
+    labels:
+      traefik.enable: true
+      traefik.name: smokeping
+
+  netbird:
+    container_name: netbird
+    image: netbirdio/netbird
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    <<: *log
+    volumes:
+      - /opt/appdata/netbird:/etc/netbird
+
+  autoheal:
+    container_name: autoheal
+    image: willfarrell/autoheal
+    restart: always
+    network_mode: none
+    <<: *log
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  theme.park:
+    container_name: theme.park
+    image: gilbn/theme.park
+    restart: unless-stopped
+    <<: *log
+    environment:
+      TP_SCHEME: http
+      <<: *env
+    ports:
+      - 7070:80
+    tmpfs:
+      - /config:size=150m
 
   dozzle:
     container_name: dozzle
     image: amir20/dozzle
     restart: always
-    ports:
-      - 8888:8888
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-
-  castblock:
-    container_name: castblock
-    image: ghcr.io/nichobi/sponsorblockcast
-    restart: unless-stopped
-    network_mode: host
-    environment:
-      SBCCATEGORIES: sponsor
+    labels:
+      traefik.enable: true
+      traefik.name: logs
 
   airconnect:
     container_name: airconnect
@@ -150,8 +174,8 @@ services:
       ARCH_VAR: aarch64
 
   vnstat:
-    image: vergoh/vnstat
     container_name: vnstat
+    image: vergoh/vnstat
     restart: unless-stopped
     network_mode: host
     environment:
@@ -159,148 +183,104 @@ services:
       HTTP_PORT: 7000
       LARGE_FONTS: 1
       HTTP_LOG: /dev/null
+      <<: *tz
     volumes:
       - /opt/appdata/vnstat:/var/lib/vnstat
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     labels:
+      traefik.enable: true
+      traefik.name: vnstat
       traefik.http.services.vnstat.loadbalancer.server.port: 7000
 
   vnstat-router:
-    image: vergoh/vnstat
     container_name: vnstat-router
+    image: vergoh/vnstat
     restart: unless-stopped
     environment:
       SERVER_NAME: orbi
       LARGE_FONTS: 1
       HTTP_LOG: /dev/null
       RUN_VNSTATD: 0
+      <<: *tz
     volumes:
-      - /mnt/res:/var/lib/vnstat
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
+      - /mnt/res:/var/lib/vnstat:ro
     labels:
+      traefik.enable: true
       traefik.http.routers.vnstat-router.rule: Host(`vnstat.router.nt`)
-      
-#  duckdns: 
-#    container_name: duckdns 
-#    image: linuxserver/duckdns
-#    restart: unless-stopped
-#    environment:
-#      TZ: Asia/Kolkata
 
   traefik:
     container_name: traefik
-    image: traefik:v2.6.0
+    image: traefik:v2.8
     restart: unless-stopped
-  #  healthcheck:
-  #    test: ["CMD", "traefik", "healthcheck"]
+    <<: *log
+    command:
+      - --api.insecure=true
+      - --log.level=INFO
+      - --global.checknewversion=false
+      - --global.sendanonymoususage=false
+      # Entrypoints
+      - --entrypoints.http.address=:80
+      # Local plugins
+      - --experimental.localplugins.rewritebody.modulename=github.com/packruler/rewrite-body
+      # File provider
+      - --providers.file.filename=/etc/traefik/file-provider.yml
+      - --providers.file.watch=true
+      # Docker provider
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.defaultRule=Host(`{{ index .Labels "traefik.name" }}.always-on.nt`)
     extra_hosts:
       - "host.docker.internal:10.0.0.10"
+    mem_limit: 200m
     networks:
-      default: {}
-      dns: {}
+      - default
+      - dns
     ports:
       - 80:80
-      - 8000:8080
-    environment:
-      <<: *env
     volumes:
-      - /opt/appdata/traefik:/etc/traefik
+      - /opt/appdata/traefik/config:/etc/traefik
+      - /opt/appdata/traefik/plugins:/plugins-local
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
+      traefik.enable: true
+      traefik.name: traefik
       traefik.http.routers.traefik.service: api@internal
 
-  blackbox:
-    image: prom/blackbox-exporter
-    container_name: blackbox
-    restart: unless-stopped
-#    hostname: blackbox
-    network_mode: host
-    command:
-     - --log.level=warn
-     - --config.file=/config/config.yml
-    cap_add:
-     - CAP_NET_RAW
-#    ports:
-#     - 9115:9115
-    volumes:
-     - /opt/appdata/blackbox:/config
-#    labels:
-#      traefik.enable: false
-
   filebrowser:
-    image: filebrowser/filebrowser
     container_name: filebrowser
+    image: filebrowser/filebrowser
     restart: unless-stopped
     user: "1001:1001"
     environment:
-      FB_ROOT: /files
-      FB_CONFIG: /config/config.json
-      FB_DATABASE: /config/filebrowser.db
+      FB_DATABASE: /config/database.db
       FB_DISABLE-EXEC: true
       FB_DISABLE-TYPE-DETECTION-BY-HEADER: true
       FB_DISABLE-PREVIEW-RESIZE: true
-      FB_DISABLE-THUMBNAILS: true
-    tmpfs:
-      - /srv:size=1m
     volumes:
       - /opt/appdata/filebrowser:/config
       #
-      - /home/agneev:/files/home
-      - /opt/appdata:/files/appdata
-      - /mnt:/files/mnt
+      - /home/agneev:/srv/home
+      - /opt/appdata:/srv/appdata
+      - /mnt:/srv/mnt
+    labels:
+      traefik.enable: true
+      traefik.name: filebrowser
 
   homer:
-    image: b4bz/homer
     container_name: homer
+    image: b4bz/homer
     restart: unless-stopped
-    logging:
-      driver: none
-    environment:
-      UID: 1001
-      GID: 1001
+    user: "1001:1001"
     volumes:
       - /opt/appdata/homer:/www/assets
     labels:
+      traefik.enable: true
       traefik.http.routers.homer.rule: Host(`home.lab`)
-
-  netdata:
-    image: netdata/netdata
-    container_name: netdata
-    hostname: always-on
-    restart: unless-stopped
-    healthcheck:
-      test: "/usr/sbin/health.sh > /dev/null 2>&1"
-    logging:
-      driver: none
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - apparmor:unconfined
-    ports:
-      - 19999:19999
-    environment:
-      NETDATA_CLAIM_TOKEN: ${NETDATA_CLAIM_TOKEN}
-      NETDATA_CLAIM_URL: https://app.netdata.cloud
-      NETDATA_CLAIM_ROOMS: ${NETDATA_CLAIM_ROOMS}
-      PGID: 1001
-    volumes:
-      - /opt/appdata/netdata:/etc/netdata
-      - netdata-lib:/var/lib/netdata
-      - netdata-cache:/var/cache/netdata
-      #
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/passwd:/host/etc/passwd:ro
-      - /etc/group:/host/etc/group:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /etc/os-release:/host/etc/os-release:ro
 
   speedtest-tracker:
     container_name: speedtest-tracker
     image: henrywhitaker3/speedtest-tracker:dev-arm
     restart: unless-stopped
+    <<: *log
     ports:
       - 8700:80
     environment:
@@ -312,11 +292,15 @@ services:
     volumes:
       - /opt/appdata/speedtest-tracker/app:/config/www/app/Bin
       - /opt/appdata/speedtest-tracker:/config
+    labels:
+      traefik.enable: true
+      traefik.name: speedtest
 
   openspeedtest:
-    image: openspeedtest/latest
     container_name: openspeedtest
+    image: openspeedtest/latest
     restart: unless-stopped
+    <<: *log
     ports:
       - 9999:3000
 
@@ -325,30 +309,27 @@ services:
     container_name: homebridge
     restart: unless-stopped
     network_mode: host
+    <<: *log
     environment:
       <<: *env
     volumes:
       - /opt/appdata/homebridge:/homebridge
     labels:
+      traefik.enable: true
+      traefik.name: homebridge
       traefik.http.services.homebridge.loadbalancer.server.port: 8581
 
   portainer:
-    image: portainer/portainer-ce
     container_name: portainer
+    image: portainer/portainer-ce
     restart: always
+    <<: *log
     ports:
       - 9000:9000
     volumes:
       - /opt/appdata/portainer:/data
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
-      traefik.http.services.portainer.loadbalancer.server.port: 9000 # Multiple ports exposed
-
-  uptime-kuma:
-    image: louislam/uptime-kuma
-    container_name: uptime-kuma
-    restart: unless-stopped
-    logging:
-      driver: none
-    volumes:
-      - /opt/appdata/uptime-kuma:/app/data
+      traefik.enable: true
+      traefik.name: portainer
+      traefik.http.services.portainer.loadbalancer.server.port: 9000

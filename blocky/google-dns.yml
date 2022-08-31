@@ -1,6 +1,0 @@
-logLevel: fatal
-
-upstream:
-  default:
-    - https://8.8.8.8/dns-query
-    - https://8.8.4.4/dns-query

@@ -86,11 +86,13 @@ Runs (mostly in Docker):
 
 [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) manages DNS and DHCP, as well as acts as the content-blocker in the network.
 
-I use Google Public DNS over DNS-over-HTTPS as well as my ISP's DNS servers using [Unbound](https://github.com/NLnetLabs/unbound) and [blocky](https://github.com/0xERR0R/blocky).
+I use Cloudflare Gateway DNS over DNS-over-HTTPS, which is similar to 1.1.1.1 but supports EDNS Client Subnet in addition to it being a managed DNS service.
 
 <!-- ![feb-2022-archive](https://user-images.githubusercontent.com/19761269/155761364-908e0759-6703-449c-8ca7-54a9c92b9478.png) -->
 
-![It's always DNS](https://user-images.githubusercontent.com/19761269/159464106-aac45518-26ef-4fe5-8bc3-865cb35e8868.png)
+<!-- ![It's always DNS](https://user-images.githubusercontent.com/19761269/159464106-aac45518-26ef-4fe5-8bc3-865cb35e8868.png) -->
+
+![Cloudflare Gateway DNS](https://user-images.githubusercontent.com/19761269/187674721-02be2231-9b3d-4eef-b3d7-08de09b8794e.png)
 
 ## Unified access
 
