@@ -1,21 +1,15 @@
-version: '3.9'
-
-x-env: &env
-  PGID: 1001
-  PUID: 1001
-  UMASK: 002
+x-timezone: &tz
   TZ: Asia/Kolkata
 
-x-labels: &pullio
-  org.hotio.pullio.update: true
-  org.hotio.pullio.notify: true
-  org.hotio.pullio.discord.webhook: ${DISCORD_WEBHOOK}
+x-environment-vars: &env
+  PUID: 1001
+  PGID: 1001
+  UMASK: 002
+  <<: *tz
 
-volumes:
-  netdata-lib:
-    name: netdata-lib
-  netdata-cache:
-    name: netdata-cache
+x-logging: &log
+  logging:
+    driver: journald
 
 networks:
   default:
@@ -26,42 +20,162 @@ networks:
 
 services:
 
+  dash.:
+    container_name: dash.
+    image: mauricenino/dashdot
+    restart: unless-stopped
+    privileged: true
+    environment:
+      DASHDOT_ENABLE_CPU_TEMPS: true
+      DASHDOT_ENABLE_STORAGE_SPLIT_VIEW: true
+      DASHDOT_ALWAYS_SHOW_PERCENTAGES: true
+      DASHDOT_RAM_LABEL_LIST: size,type,frequency
+    ports:
+      - 81:3001
+    volumes:
+      - /:/mnt/host:ro
+    labels:
+      traefik.enable: true
+      traefik.name: sys
+
+  autobrr:
+    container_name: autobrr
+    image: ghcr.io/autobrr/autobrr
+    restart: unless-stopped
+    user: "1001:1001"
+    expose:
+      - 7474
+    environment:
+      <<: *env
+    volumes:
+      - /opt/appdata/autobrr:/config
+    labels:
+      traefik.enable: true
+      traefik.name: autobrr
+
+  paperless-ngx:
+    image: linuxserver/paperless-ngx
+    container_name: paperless-ngx
+    restart: unless-stopped
+    <<: *log
+    volumes:
+      - /opt/appdata/paperless-ngx/config:/config
+      - /opt/appdata/paperless-ngx/data:/data
+    environment:
+      <<: *env
+    labels:
+      traefik.enable: true
+      traefik.name: docs
+
+  youtube-dl-material:
+    container_name: youtube-dl-material
+    image: tzahi12345/youtubedl-material
+    restart: unless-stopped
+    <<: *log
+    environment:
+      UID: 1001
+      GID: 1001
+    volumes:
+      - /opt/appdata/youtube-dl-material/appdata:/app/appdata
+      - /opt/appdata/youtube-dl-material/subscriptions:/app/subscriptions
+      #
+      - /opt/storage/youtube-dl:/app/video
+      - /opt/storage/youtube-dl:/app/audio
+    labels:
+      traefik.enable: true
+      traefik.name: youtube-dl
+
+  webnet-tools:
+    container_name: webnet-tools
+    image: agneev/webnet-tools
+    restart: unless-stopped
+    <<: *log
+    labels:
+      traefik.enable: true
+      traefik.name: network-tools
+
+  homarr:
+    container_name: homarr
+    image: ghcr.io/ajnart/homarr
+    restart: unless-stopped
+    <<: *log
+    volumes:
+      - /opt/appdata/homarr/configs:/app/data/configs
+      - /opt/appdata/homarr/icons:/app/public/icons
+    labels:
+      traefik.enable: true
+      traefik.name: homarr
+
+  netbird:
+    container_name: netbird
+    image: netbirdio/netbird
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    <<: *log
+    volumes:
+      - /opt/appdata/netbird:/etc/netbird
+
+  samba:
+    container_name: samba
+    image: elswork/samba
+    restart: unless-stopped
+    command: "-u xxx"
+    environment:
+      <<: *tz
+    ports:
+      - 445:445
+    volumes:
+      - /opt/appdata/samba:/etc/samba
+      #
+      - /mnt:/mnt
+      - ~/:/ssd
+      - /opt/storage:/nas
+
   plextraktsync:
     container_name: plextraktsync
     image: ghcr.io/taxel/plextraktsync
     restart: unless-stopped
     user: "1001:1001"
-    command: ["watch"]
+    command: watch
+    <<: *log
     depends_on:
       - plex
     environment:
       PTS_LOG_DIR: /logs
-      TZ: Asia/Kolkata
+      <<: *tz
     tmpfs:
       - /logs:size=10m,uid=1001,gid=1001
     volumes:
       - /opt/appdata/plextraktsync:/app/config
-    labels:
-      <<: *pullio
 
   cloudflared:
     container_name: cloudflared
-    image: msnelling/cloudflared
+    image: cloudflare/cloudflared
     restart: unless-stopped
-    command: ["cloudflared", "tunnel", "run"]
-    depends_on:
-      - traefik
-    environment:
-      NO_AUTOUPDATE: true
-    volumes:
-      - ~/.cloudflared:/etc/cloudflared
-    labels:
-      <<: *pullio
+    <<: *log
+    command: tunnel run --token ${CLOUDFLARED_TOKEN}
 
   aria2:
     container_name: aria2
     image: hurlenko/aria2-ariang
     restart: unless-stopped
+    <<: *log
+    command:
+      - --dir=/aria2/data
+      - --max-connection-per-server=4
+      - --max-concurrent-downloads=5
+      - --file-allocation=falloc
+      - --enable-mmap=true
+      - --disk-cache=64M
+      - --continue=true
+      # Misc
+      - --on-download-complete=/aria2/conf/aria-post-dl.sh
+      - --save-session=/aria2/conf/aria2.session
+      - --input-file=/aria2/conf/aria2.session
+      - --enable-rpc=true
+      - --rpc-listen-all=true
+      - --rpc-allow-origin-all=true
     environment:
       ARIA2RPCPORT: 80
       <<: *env
@@ -69,40 +183,15 @@ services:
       - /opt/appdata/aria2:/aria2/conf
       - ~/downloads:/aria2/data
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: aria2
 
-#  scrypted:
-#    container_name: scrypted
-#    image: koush/scrypted
-#    restart: unless-stopped
-#    network_mode: host
-#    logging:
-#      driver: none
-#    environment:
-#      TZ: Asia/Kolkata
-#    volumes:
-#      - /opt/appdata/scrypted:/server/volume
-#    labels:
-#      traefik.http.services.scrypted-agneev.loadbalancer.server.port: 10080
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    environment:
-      GUNICORN_ACCESS_LOGFILE: /dev/null
-    volumes:
-      - /opt/appdata/pgadmin:/var/lib/pgadmin
-    labels:
-      <<: *pullio
-    
   duplicacy:
     container_name: duplicacy
     image: hotio/duplicacy
     restart: unless-stopped
     hostname: duplicacy
+    <<: *log
     environment:
       <<: *env
     tmpfs:
@@ -115,7 +204,8 @@ services:
       - /opt/appdata:/appdata
       - ~/:/ssd
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: duplicacy
 
   vnstat:
     image: vergoh/vnstat
@@ -127,33 +217,14 @@ services:
       HTTP_PORT: 7000
       LARGE_FONTS: 1
       HTTP_LOG: /dev/null
+      <<: *tz
     volumes:
       - /opt/appdata/vnstat/vnstat.conf:/etc/vnstat.conf
       - /opt/appdata/vnstat:/var/lib/vnstat
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     labels:
-      traefik.http.services.vnstat-agneev.loadbalancer.server.port: 7000
-      <<: *pullio
-
-#  syncthing:
-#    container_name: syncthing
-#    image: linuxserver/syncthing
-#    restart: unless-stopped
-#    hostname: falcon
-#    ports:
-#      - 22000:22000
-#    environment:
-#      <<: *env
-#    volumes:
-#      - /opt/appdata/syncthing:/config
-      #
-#      - ~/:/ssd
-#      - /mnt/mfs-drive:/drive
-#      - /mnt/mfs-knox:/knox
-#    labels:
-#      traefik.http.services.syncthing-agneev.loadbalancer.server.port: 8384
-#      <<: *pullio
+      traefik.enable: true
+      traefik.name: vnstat
+      traefik.http.services.vnstat.loadbalancer.server.port: 7000
 
   autoheal:
     container_name: autoheal
@@ -164,212 +235,166 @@ services:
       AUTOHEAL_CONTAINER_LABEL: all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      <<: *pullio
 
   traefik:
     container_name: traefik
-    image: traefik:v2.6.0
+    image: traefik:v2.8
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
+    <<: *log
+    command:
+      - --log.level=INFO
+      - --api.insecure=true
+      - --global.checknewversion=false
+      - --global.sendanonymoususage=false
+      # Entrypoints
+      - --entrypoints.http.address=:80
+#      - --entrypoints.secure.address=:443
+      # SSL
+#      - --certificatesResolvers.cloudflare.acme.email=${ACME_EMAIL}
+#      - --certificatesResolvers.cloudflare.acme.storage=/etc/traefik/cloudflare.json
+#      - --certificatesResolvers.cloudflare.acme.dnsChallenge.provider=manual
+#      - --certificatesResolvers.duckdns.acme.email=${ACME_EMAIL}
+#      - --certificatesResolvers.duckdns.acme.storage=/etc/traefik/duckdns.json
+#      - --certificatesResolvers.duckdns.acme.dnsChallenge.provider=duckdns
+      # File provider
+      - --providers.file.filename=/etc/traefik/file-provider.yml
+      - --providers.file.watch=true
+      # Docker
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.defaultRule=HostRegexp(`{{ index .Labels "traefik.name" }}.{i:falcon.nt|agneev.ml}`)
     extra_hosts:
       - "host.docker.internal:10.0.0.11"
+    environment:
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
     ports:
       - 80:80
-      - 8000:8080
+#      - 443:443
     volumes:
       - /opt/appdata/traefik:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: traefik
+      traefik.http.routers.traefik.service: api@internal
 
   dozzle:
     container_name: dozzle
     image: amir20/dozzle
     restart: always
-    ports:
-      - 8888:8888
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      <<: *pullio
-
-#  caddy:
-#    container_name: caddy
-#    image: hotio/caddy
-#    restart: unless-stopped
-#    depends_on:
-#      - traefik
-#    environment:
-#      <<: *env
-#    volumes:
-#      - /opt/appdata/caddy:/config
-#    labels:
-#      traefik.http.services.caddy-agneev.loadbalancer.server.port: 8080
-#      <<: *pullio
+      traefik.enable: true
+      traefik.name: logs
 
   archivebox:
     container_name: archivebox
-    image: archivebox/archivebox:master
+    image: archivebox/archivebox
     restart: unless-stopped
+    <<: *log
     environment:
       MEDIA_MAX_SIZE: 750m
       <<: *env
     volumes:
       - /opt/appdata/archivebox:/data
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: archivebox
 
   librespot:
     container_name: librespot
-    image: agneev/librespot-alsa
+    image: agneev/librespot-java
     restart: unless-stopped
-    command:
-      - --name=Bedroom Speakers
-      - --bitrate=320
-      - --initial-volume=60
-      - --autoplay
-      - --disable-discovery
-      - --username=$SPOTIFY_USERNAME
-      - --password=$SPOTIFY_PASSWORD
+    <<: *log
     devices:
       - /dev/snd:/dev/snd
-    labels:
-      <<: *pullio
+    volumes:
+      - /opt/appdata/librespot-java:/config
 
-  hdidle:
-    container_name: hdidle
-    image: hotio/hdidle
-    restart: unless-stopped
-    network_mode: none
-    environment:
-      ARGS: "-i 600"
-      <<: *env
-    tmpfs:
-      - /config:size=1m
-    devices:
-      - /dev/sdb:/dev/sdb
-      - /dev/sdc:/dev/sdc
-      - /dev/sdd:/dev/sdd
-      - /dev/sde:/dev/sde
-    labels:
-      <<: *pullio
-      
   filebrowser:
     image: filebrowser/filebrowser
     container_name: filebrowser
     restart: unless-stopped
     user: "1001:1001"
-    healthcheck:
-      disable: true
     environment:
-      FB_ROOT: /files
-      FB_CONFIG: /config/config.json
-      FB_DATABASE: /config/filebrowser.db
+      FB_DATABASE: /config/database.db
       FB_DISABLE-EXEC: true
       FB_DISABLE-TYPE-DETECTION-BY-HEADER: true
       FB_DISABLE-PREVIEW-RESIZE: true
-      FB_DISABLE-THUMBNAILS: true
-    tmpfs:
-      - /srv:size=1m
     volumes:
       - /opt/appdata/filebrowser:/config
-      # 
-      - ~/:/files/home
-      - /opt/appdata:/files/appdata
-      - /mnt:/files/mnt
+      #
+      - ~/:/srv/home
+      - /opt/storage:/srv/storage
+      - /opt/appdata:/srv/appdata
+      - /mnt:/srv/mnt
     labels:
-      traefik.http.routers.filebrowser.rule: Host(`files.falcon.nt`)
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: files
 
   grafana:
     image: grafana/grafana
     container_name: grafana
     restart: unless-stopped
+    <<: *log
     user: "1001:1001"
+    depends_on:
+      - prometheus
     volumes:
       - /opt/appdata/grafana/config:/etc/grafana
       - /opt/appdata/grafana/data:/var/lib/grafana
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: grafana
 
   prometheus:
     image: prom/prometheus
     container_name: prometheus
     restart: unless-stopped
     user: "1001:1001"
+    <<: *log
     command:
+#      - --storage.local.target-heap-size=
       - --log.level=warn
       - --config.file=/config.yml
+    environment:
+      <<: *tz
     volumes:
       - /opt/appdata/prometheus/prometheus.yml:/config.yml
       - /opt/appdata/prometheus:/prometheus
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: prom
 
   shairport-sync:
     container_name: shairport-sync
     image: mikebrady/shairport-sync
     restart: unless-stopped
     network_mode: host
-    command: "-c /config.conf"
     volumes:
-      - /opt/appdata/shairport-sync/config.conf:/config.conf
+      - /opt/appdata/shairport-sync/config.conf:/etc/shairport-sync.conf
     devices:
       - /dev/snd:/dev/snd
-    labels:
-      <<: *pullio
 
   freshrss:
     image: linuxserver/freshrss
     container_name: freshrss
     restart: unless-stopped
+    <<: *log
     environment:
       <<: *env
     volumes:
       - /opt/appdata/freshrss:/config
     labels:
-      <<: *pullio
-
-  netdata:
-    image: netdata/netdata
-    container_name: netdata
-    hostname: falcon
-    restart: unless-stopped
-    healthcheck:
-      test: "/usr/sbin/health.sh > /dev/null 2>&1"
-    logging:
-      driver: none
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - apparmor:unconfined
-    ports:
-      - 19999:19999
-    environment:
-      PGID: 1001
-      NETDATA_CLAIM_TOKEN: ${NETDATA_CLAIM_TOKEN}
-      NETDATA_CLAIM_URL: https://app.netdata.cloud
-      NETDATA_CLAIM_ROOMS: ${NETDATA_CLAIM_ROOMS}
-    volumes:
-      - /opt/appdata/netdata:/etc/netdata
-      - netdata-lib:/var/lib/netdata
-      - netdata-cache:/var/cache/netdata
-      # OS access
-      - /etc/passwd:/host/etc/passwd:ro
-      - /etc/group:/host/etc/group:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /etc/os-release:/host/etc/os-release:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: freshrss
 
   yacht:
     container_name: yacht
     image: selfhostedpro/yacht:devel
     restart: always
+    <<: *log
     environment:
       DISABLE_AUTH: True
       SECRET_KEY: key
@@ -378,78 +403,65 @@ services:
       - /opt/appdata/yacht:/config
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
-      <<: *pullio
-  
+      traefik.enable: true
+      traefik.name: yacht
+
   scrutiny:
     container_name: scrutiny
-    image: hotio/scrutiny
+    image: ghcr.io/analogj/scrutiny
     restart: unless-stopped
-    logging:
-      driver: none
+    <<: *log
     cap_add:
       - SYS_RAWIO
-    environment:
-      INTERVAL: 10800
-      <<: *env
     volumes:
+      - /opt/appdata/scrutiny/config:/opt/scrutiny/config
+      - /opt/appdata/scrutiny/influxdb:/opt/scrutiny/influxdb
       - /run/udev:/run/udev:ro
-      - /opt/appdata/scrutiny:/config
     devices:
       - /dev/sda:/dev/sda:ro
       - /dev/sdb:/dev/sdb:ro
-      - /dev/sdc:/dev/sdc:ro
-      - /dev/sdd:/dev/sdd:ro
-      - /dev/sde:/dev/sde:ro
+     # - /dev/sdc:/dev/sdc:ro
+     # - /dev/sdd:/dev/sdd:ro
+     # - /dev/sde:/dev/sde:ro
+     # - /dev/sdf:/dev/sdf:ro
     labels:
-      <<: *pullio
-      
-  node-red:
-    container_name: node-red
-    image: nodered/node-red
-    restart: unless-stopped
-    user: "1001:1001"
-    environment:
-      <<: *env
-    volumes:
-      - /opt/appdata/node-red:/data
-    labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: scrutiny
 
-  code-server:
-    container_name: code-server
-    image: linuxserver/code-server
-    restart: unless-stopped
-    environment:
-      DOCKER_HOST: tcp://falcon.tailnet-d10c.ts.net:2375
-      <<: *env
-    volumes:
-      - /opt/appdata/code-server:/config
-      #
-      - ~/git:/config/workspace/git
-      - ~/scripts:/config/workspace/scripts
-      - /opt/appdata/home-assistant:/config/workspace/ha-config
-    labels:
-      <<: *pullio
- 
   home-assistant:
     container_name: home-assistant
     image: homeassistant/home-assistant
     restart: unless-stopped
     network_mode: host
-    depends_on:
-      - postgres
+    <<: *log
     environment:
-      TZ: Asia/Kolkata
+      <<: *tz
     volumes:
       - /opt/appdata/home-assistant:/config
     labels:
-      traefik.http.services.home-assistant-agneev.loadbalancer.server.port: 8123
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: home-assistant
+      traefik.http.services.home-assistant.loadbalancer.server.port: 8123
+
+  node-red:
+    container_name: node-red
+    image: nodered/node-red
+    restart: unless-stopped
+    user: "1001:1001"
+    <<: *log
+    environment:
+      <<: *env
+    volumes:
+      - /opt/appdata/node-red:/data
+    labels:
+      traefik.enable: true
+      traefik.name: node-red
 
   qbittorrent:
     container_name: qbittorrent
-    image: hotio/qflood:release-4.3.9--4.7.0
+    image: hotio/qflood #:release-4.3.9--4.7.0
     restart: unless-stopped
+    <<: *log
     environment:
       <<: *env
     volumes:
@@ -460,67 +472,72 @@ services:
       - ~/drive-local/local/qbt:/drive/local/qbt
       - /mnt/knox:/knox
     labels:
-      traefik.http.routers.qbittorrent-agneev.service: qbittorrent-agneev@docker
-      traefik.http.routers.qbittorrent-agneev.rule: Host(`qbt.falcon.nt`)
-      traefik.http.services.qbittorrent-agneev.loadbalancer.server.port: 8080
+      traefik.enable: true
+      traefik.http.routers.qbittorrent.service: qbittorrent
+      traefik.http.routers.qbittorrent.rule: Host(`qbt.falcon.nt`)
+      traefik.http.services.qbittorrent.loadbalancer.server.port: 8080
       # Flood
       traefik.http.routers.flood.service: flood
       traefik.http.routers.flood.rule: Host(`flood.falcon.nt`)
       traefik.http.services.flood.loadbalancer.server.port: 3000
 
   plex:
-    image: hotio/plex
     container_name: plex
+    image: hotio/plex
     restart: unless-stopped
     network_mode: host
-    healthcheck:
-      test: ["CMD", "curl", "0:32400/identity", "-fso", "/dev/null"]
     environment:
       <<: *env
     tmpfs:
       - /transcode:size=4g
     volumes:
       - /opt/appdata/plex:/config
+      - /var/log/plex/logs:/config/Logs
       #
       - /mnt/mfs-drive:/drive
       - /mnt/knox:/knox
     labels:
+      traefik.enable: true
+      traefik.name: plex
       traefik.http.services.plex.loadbalancer.server.port: 32400
-      <<: *pullio
 
   tautulli:
     container_name: tautulli
     image: linuxserver/tautulli
     restart: unless-stopped
+    <<: *log
     ports:
       - 8181:8181
     environment:
       TP_THEME: plex
+      TP_SCHEME: http
+      TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:tautulli
       <<: *env
     volumes:
       - /opt/appdata/tautulli:/config
       - /opt/appdata/plex/Logs:/plex-logs:ro
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: tautulli
 
   autoscan:
     container_name: autoscan
     image: hotio/autoscan
     restart: unless-stopped
+    <<: *log
     ports:
-      - 100.120.109.59:3030:3030
+      - 100.125.93.18:3030:3030
     environment:
       <<: *env
     volumes:
       - /opt/appdata/autoscan:/config
-    labels:
-      <<: *pullio
 
   radarr:
     container_name: radarr
     image: linuxserver/radarr:nightly
     restart: unless-stopped
+    <<: *log
     depends_on:
       - autoscan
     ports:
@@ -528,6 +545,8 @@ services:
     environment:
       TP_THEME: onedark
       TP_COMMUNITY_THEME: true
+      TP_SCHEME: http
+      TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:radarr
       <<: *env
     volumes:
@@ -537,52 +556,48 @@ services:
       - /mnt/mfs-drive:/drive
       - /mnt/knox:/knox
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: radarr
 
   radarr4k:
     container_name: radarr4k
     image: linuxserver/radarr:nightly
     restart: unless-stopped
+    <<: *log
     depends_on:
-      - autoscan
+     - autoscan
     ports:
-      - 7879:7878
+     - 7879:7878
     environment:
-      TP_THEME: organizr
-      TP_ADDON: radarr-4k-logo
-      DOCKER_MODS: ghcr.io/gilbn/theme.park:radarr
-      <<: *env
+     TP_THEME: organizr
+     TP_ADDON: radarr-4k-logo
+     TP_SCHEME: http
+     TP_DOMAIN: 10.0.0.10:7070
+     DOCKER_MODS: ghcr.io/gilbn/theme.park:radarr
+     <<: *env
     volumes:
-      - /opt/appdata/radarr4k:/config
-      - ~/scripts/radarr_connect.sh:/script.sh
-      #
-      - /mnt/mfs-drive:/drive
-      - /mnt/knox:/knox
+     - /opt/appdata/radarr4k:/config
+     - ~/scripts/radarr_connect.sh:/script.sh
+     #
+     - /mnt/mfs-drive:/drive
+     - /mnt/knox:/knox
     labels:
-      <<: *pullio
-
-  sonarr2:
-    container_name: sonarr2
-    image: linuxserver/sonarr:develop
-    restart: unless-stopped
-    environment:
-      <<: *env
-    volumes:
-      - /opt/appdata/sonarr2:/config
-      - ~/scripts/sonarr_connect.sh:/script.sh
-      #
-      - /mnt/mfs-drive:/drive
+      traefik.enable: true
+      traefik.name: radarr4k
 
   sonarr:
     container_name: sonarr
     image: linuxserver/sonarr:develop
     restart: unless-stopped
+    <<: *log
     depends_on:
       - autoscan
     ports:
       - 8989:8989
     environment:
       TP_THEME: plex
+      TP_SCHEME: http
+      TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:sonarr
       <<: *env
     volumes:
@@ -592,12 +607,14 @@ services:
       - /mnt/mfs-drive:/drive
       - /mnt/knox:/knox
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: sonarr
 
   sonarr4k:
     container_name: sonarr4k
     image: linuxserver/sonarr:develop
     restart: unless-stopped
+    <<: *log
     depends_on:
       - autoscan
     ports:
@@ -605,90 +622,46 @@ services:
     environment:
       TP_THEME: organizr
       TP_ADDON: sonarr-4k-logo
+      TP_SCHEME: http
+      TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:sonarr
       <<: *env
     volumes:
       - /opt/appdata/sonarr4k:/config
       - ~/scripts/sonarr_connect.sh:/script.sh
       #
-      - /mnt/mfs-drive:/drive
-      - /mnt/knox:/knox
+#      - /mnt/mfs-drive:/drive
+#      - /mnt/knox:/knox
     labels:
-      <<: *pullio
+      traefik.enable: true
+      traefik.name: sonarr4k
 
-#  unpackerr:
-#    container_name: unpackerr
-#    image: hotio/unpackerr
-#    restart: unless-stopped
-#    environment:
-      # Sonarr
-#      UN_SONARR_0_URL: http://sonarr
-#      UN_SONARR_0_API_KEY: ${SONARR_API_KEY}
-      # Sonarr4K
-#      UN_SONARR_1_URL: http://sonarr4k
-#      UN_SONARR_1_API_KEY: ${SONARR4K_API_KEY}
-      # Radarr
-#      UN_RADARR_0_URL: http://radarr
-#      UN_RADARR_0_API_KEY: ${RADARR_API_KEY}
-      # Radarr4k
-#      UN_RADARR_1_URL: http://radarr4k
-#      UN_RADARR_1_API_KEY: ${RADARR4K_API_KEY}
-#      <<: *env
-#    tmpfs:
-#      - /config:size=1m
-#    volumes:
-#      - ~/drive-local/local/qbt:/drive/local/qbt
-
-#  tandoor:
-#    container_name: tandoor
-#    image: vabene1111/recipes
-#    restart: unless-stopped
-#    environment:
-#      <<: *env
-#    volumes:
-#      - /opt/appdata/tandoor/static:/opt/recipes/staticfiles
-#      - /opt/appdata/tandoor/media:/opt/recipes/mediafiles
-#    labels:
-#      <<: *pullio
-
-  postgres:
-    container_name: postgres
-    image: postgres:14
+  unpackerr:
+    container_name: unpackerr
+    image: hotio/unpackerr
     restart: unless-stopped
-    user: 1001:1001
-    shm_size: 128m
-    ports:
-      - 127.0.0.1:5432:5432
+    <<: *log
+    depends_on:
+      - radarr
+      - sonarr
+#    - radarr4k
+#    - sonarr4k
+    environment:
+      UN_FOLDER_0_PATH: /drive/local/qbt
+      UN_FOLDER_0_DELETE_AFTER: 0
+      #
+      UN_SONARR_0_URL: http://sonarr:8989
+      UN_SONARR_0_API_KEY: ${SONARR_API_KEY}
+      UN_RADARR_0_URL: http://radarr:7878
+      UN_RADARR_0_API_KEY: ${RADARR_API_KEY}
+      # Sonarr4K
+#      UN_SONARR_1_URL: http://sonarr4k:8989
+#      UN_SONARR_1_API_KEY: ${SONARR4K_API_KEY}
+      # Radarr4K
+#      UN_RADARR_1_URL: http://radarr4k:7878
+#      UN_RADARR_1_API_KEY: ${RADARR4K_API_KEY}
+      <<: *env
+    tmpfs:
+      - /config:size=1m
     volumes:
-      - /opt/appdata/postgres/config.conf:/etc/postgresql/postgresql.conf
-      - /opt/appdata/postgres/data:/var/lib/postgresql/data
-    labels:
-      traefik.enable: false
-      <<: *pullio
-
-#   youtube-dl:
-#     container_name: youtube-dl
-#     image: mikenye/youtube-dl
-#     restart: unless-stopped
-#     environment:
-#       <<: *env
-#     labels:
-#       <<: *pullio
-
-#   photoprism:
-#     container_name: photoprism
-#     image: photoprism/photoprism
-#     restart: unless-stopped
-#     security_opt:
-#       - seccomp:unconfined
-#       - apparmor:unconfined
-#     working_dir: "/photoprism"
-#     volumes:
-#       - /opt/appdata/photoprism:/photoprism/storage
-#       - /mnt/knox/photos:/photoprism/originals
-#     environment:
-#       PHOTOPRISM_UID: 1001
-#       PHOTOPRISM_GID: 1001
-#       PHOTOPRISM_DATABASE_DRIVER: sqlite
-#     labels:
-#       <<: *pullio
+      - ~/drive-local/local/qbt:/drive/local/qbt
