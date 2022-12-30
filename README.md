@@ -60,7 +60,7 @@ Runs (mostly in Docker):
 `always-on`
 
 - ⚡ Raspberry Pi 4 (4GB model)
-  - Ubuntu Server 20.04 LTS
+  - Ubuntu Server 22.04 LTS
 - 📼 32GB microSD card
 - 🌐 Gigabit ethernet
 
