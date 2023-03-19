@@ -1,3 +1,7 @@
+volumes:
+  netdata-lib:
+  netdata-cache:
+
 x-timezone: &tz
   TZ: Asia/Kolkata
 
@@ -12,6 +16,29 @@ x-logging: &log
     driver: journald
 
 networks:
+  vlan:
+    name: vlan
+    driver: macvlan
+    driver_opts:
+      parent: eth0
+    ipam:
+      config:
+        - subnet: 10.0.0.1/24
+          gateway: 10.0.0.1
+          ip_range: 10.0.0.80/28 # 10.0.0.80 - 10.0.0.95
+
+  proxy:
+    name: proxy
+    ipam:
+      config:
+        - subnet: 172.19.2.0/24
+
+  media:
+    name: media
+    ipam:
+      config:
+        - subnet: 172.19.3.0/24
+
   default:
     name: network1
     ipam:
@@ -20,16 +47,104 @@ networks:
 
 services:
 
-  dash.:
+  recyclarr:
+    container_name: recyclarr
+    image: recyclarr/recyclarr
+    restart: unless-stopped
+    user: 1001:1001
+    environment:
+      CRON_SCHEDULE: '*/30 * * * *'
+      <<: *tz
+    networks:
+      - media
+    volumes:
+      - /opt/appdata/recyclarr:/config
+
+  overseerr:
+    container_name: overseerr
+    image: linuxserver/overseerr
+    restart: unless-stopped
+    environment:
+      <<: *env
+    networks:
+      - media
+    volumes:
+      - /opt/appdata/overseerr:/config
+    labels:
+      traefik.enable: true
+      traefik.name: overseerr
+
+  bazarr:
+    container_name: bazarr
+    image: hotio/bazarr
+    restart: unless-stopped
+    depends_on:
+      - radarr
+      - sonarr
+    environment:
+      <<: *env
+    networks:
+      - media
+    volumes:
+      - /opt/appdata/bazarr:/config
+      - /mnt/mfs-drive:/media
+      - /mnt/knox/media:/local
+    labels:
+      traefik.enable: true
+      traefik.name: bazarr
+
+  bazarr4k:
+    container_name: bazarr4k
+    image: hotio/bazarr
+    restart: unless-stopped
+    depends_on:
+      - radarr4k
+      - sonarr4k
+    environment:
+      <<: *env
+    networks:
+      - media
+    volumes:
+      - /opt/appdata/bazarr4k:/config
+      - /mnt/mfs-drive:/media
+      - /mnt/knox/media:/local
+    labels:
+      traefik.enable: true
+      traefik.name: bazarr4k
+
+#  homarr:
+#    container_name: homarr
+#    image: ghcr.io/ajnart/homarr
+#    restart: unless-stopped
+#    environment:
+#      <<: *tz
+#    volumes:
+#      - /opt/appdata/homarr/config:/app/data/configs
+#      - /opt/appdata/homarr/icons:/app/data/icons
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#    labels:
+#      traefik.enable: true
+#      traefik.name: homarr
+
+  dashdot:
     container_name: dash.
     image: mauricenino/dashdot
     restart: unless-stopped
     privileged: true
     environment:
+      DASHDOT_RAM_POLL_INTERVAL: 1500
+      DASHDOT_CPU_POLL_INTERVAL: 1500
+      DASHDOT_NETWORK_POLL_INTERVAL: 1500
+      DASHDOT_NETWORK_SHOWN_DATAPOINTS: 30
+      DASHDOT_SPEED_TEST_INTERVAL: 1440
+
+      DASHDOT_PAGE_TITLE: dash. - falcon
+
       DASHDOT_ENABLE_CPU_TEMPS: true
       DASHDOT_ENABLE_STORAGE_SPLIT_VIEW: true
       DASHDOT_ALWAYS_SHOW_PERCENTAGES: true
       DASHDOT_RAM_LABEL_LIST: size,type,frequency
+      DASHDOT_ACCEPT_OOKLA_EULA: true
     ports:
       - 81:3001
     volumes:
@@ -38,93 +153,32 @@ services:
       traefik.enable: true
       traefik.name: sys
 
-  autobrr:
-    container_name: autobrr
-    image: ghcr.io/autobrr/autobrr
+  metube:
+    container_name: youtube-dl
+    image: alexta69/metube
     restart: unless-stopped
-    user: "1001:1001"
-    expose:
-      - 7474
-    environment:
-      <<: *env
-    volumes:
-      - /opt/appdata/autobrr:/config
-    labels:
-      traefik.enable: true
-      traefik.name: autobrr
-
-  paperless-ngx:
-    image: linuxserver/paperless-ngx
-    container_name: paperless-ngx
-    restart: unless-stopped
-    <<: *log
-    volumes:
-      - /opt/appdata/paperless-ngx/config:/config
-      - /opt/appdata/paperless-ngx/data:/data
-    environment:
-      <<: *env
-    labels:
-      traefik.enable: true
-      traefik.name: docs
-
-  youtube-dl-material:
-    container_name: youtube-dl-material
-    image: tzahi12345/youtubedl-material
-    restart: unless-stopped
-    <<: *log
     environment:
       UID: 1001
       GID: 1001
     volumes:
-      - /opt/appdata/youtube-dl-material/appdata:/app/appdata
-      - /opt/appdata/youtube-dl-material/subscriptions:/app/subscriptions
-      #
-      - /opt/storage/youtube-dl:/app/video
-      - /opt/storage/youtube-dl:/app/audio
+      - /opt/storage/youtube-dl:/downloads
     labels:
       traefik.enable: true
-      traefik.name: youtube-dl
-
-  webnet-tools:
-    container_name: webnet-tools
-    image: agneev/webnet-tools
-    restart: unless-stopped
-    <<: *log
-    labels:
-      traefik.enable: true
-      traefik.name: network-tools
-
-  homarr:
-    container_name: homarr
-    image: ghcr.io/ajnart/homarr
-    restart: unless-stopped
-    <<: *log
-    volumes:
-      - /opt/appdata/homarr/configs:/app/data/configs
-      - /opt/appdata/homarr/icons:/app/public/icons
-    labels:
-      traefik.enable: true
-      traefik.name: homarr
-
-  netbird:
-    container_name: netbird
-    image: netbirdio/netbird
-    restart: unless-stopped
-    network_mode: host
-    privileged: true
-    <<: *log
-    volumes:
-      - /opt/appdata/netbird:/etc/netbird
+      traefik.name: ytdl
 
   samba:
     container_name: samba
     image: elswork/samba
     restart: unless-stopped
-    command: "-u xxx"
+    command: ${SAMBA_COMMAND}
+    healthcheck:
+      disable: true
+    logging:
+      driver: none
     environment:
       <<: *tz
     ports:
-      - 445:445
+      - 445:445/tcp
     volumes:
       - /opt/appdata/samba:/etc/samba
       #
@@ -132,15 +186,16 @@ services:
       - ~/:/ssd
       - /opt/storage:/nas
 
-  plextraktsync:
+  pts:
     container_name: plextraktsync
     image: ghcr.io/taxel/plextraktsync
     restart: unless-stopped
-    user: "1001:1001"
+    user: 1001:1001
     command: watch
-    <<: *log
     depends_on:
       - plex
+    networks:
+      - media
     environment:
       PTS_LOG_DIR: /logs
       <<: *tz
@@ -148,13 +203,6 @@ services:
       - /logs:size=10m,uid=1001,gid=1001
     volumes:
       - /opt/appdata/plextraktsync:/app/config
-
-  cloudflared:
-    container_name: cloudflared
-    image: cloudflare/cloudflared
-    restart: unless-stopped
-    <<: *log
-    command: tunnel run --token ${CLOUDFLARED_TOKEN}
 
   aria2:
     container_name: aria2
@@ -181,31 +229,10 @@ services:
       <<: *env
     volumes:
       - /opt/appdata/aria2:/aria2/conf
-      - ~/downloads:/aria2/data
+      - /opt/storage/downloads:/aria2/data
     labels:
       traefik.enable: true
       traefik.name: aria2
-
-  duplicacy:
-    container_name: duplicacy
-    image: hotio/duplicacy
-    restart: unless-stopped
-    hostname: duplicacy
-    <<: *log
-    environment:
-      <<: *env
-    tmpfs:
-      - /cache:size=200m
-    volumes:
-      - /opt/appdata/duplicacy:/config
-      - /opt/appdata/duplicacy/logs:/logs
-      - /opt/appdata/duplicacy/license.sh:/etc/cont-init.d/02-license
-      #
-      - /opt/appdata:/appdata
-      - ~/:/ssd
-    labels:
-      traefik.enable: true
-      traefik.name: duplicacy
 
   vnstat:
     image: vergoh/vnstat
@@ -214,7 +241,7 @@ services:
     network_mode: host
     environment:
       SERVER_NAME: falcon
-      HTTP_PORT: 7000
+      HTTP_PORT: 7077
       LARGE_FONTS: 1
       HTTP_LOG: /dev/null
       <<: *tz
@@ -224,71 +251,53 @@ services:
     labels:
       traefik.enable: true
       traefik.name: vnstat
-      traefik.http.services.vnstat.loadbalancer.server.port: 7000
+      traefik.http.services.vnstat.loadbalancer.server.port: 7077
 
-  autoheal:
-    container_name: autoheal
-    image: willfarrell/autoheal
-    restart: always
-    network_mode: none
-    environment:
-      AUTOHEAL_CONTAINER_LABEL: all
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  traefik:
+  web:
     container_name: traefik
-    image: traefik:v2.8
+    image: traefik
     restart: unless-stopped
-    <<: *log
+    mem_limit: 200m
+    networks:
+      - default
+      - proxy
+      - media
     command:
       - --log.level=INFO
       - --api.insecure=true
       - --global.checknewversion=false
       - --global.sendanonymoususage=false
-      # Entrypoints
+
       - --entrypoints.http.address=:80
-#      - --entrypoints.secure.address=:443
-      # SSL
-#      - --certificatesResolvers.cloudflare.acme.email=${ACME_EMAIL}
-#      - --certificatesResolvers.cloudflare.acme.storage=/etc/traefik/cloudflare.json
-#      - --certificatesResolvers.cloudflare.acme.dnsChallenge.provider=manual
-#      - --certificatesResolvers.duckdns.acme.email=${ACME_EMAIL}
-#      - --certificatesResolvers.duckdns.acme.storage=/etc/traefik/duckdns.json
-#      - --certificatesResolvers.duckdns.acme.dnsChallenge.provider=duckdns
-      # File provider
+    #   - --entrypoints.secure.address=:443
+
+    #   - --certificatesResolvers.cloudflare.acme.email=${ACME_EMAIL}
+    #   - --certificatesResolvers.cloudflare.acme.storage=/etc/traefik/cloudflare.json
+    #   - --certificatesResolvers.cloudflare.acme.dnsChallenge.provider=manual
+    #   - --certificatesResolvers.duckdns.acme.email=${ACME_EMAIL}
+    #   - --certificatesResolvers.duckdns.acme.storage=/etc/traefik/duckdns.json
+    #   - --certificatesResolvers.duckdns.acme.dnsChallenge.provider=duckdns
+
       - --providers.file.filename=/etc/traefik/file-provider.yml
       - --providers.file.watch=true
-      # Docker
+
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
-      - --providers.docker.defaultRule=HostRegexp(`{{ index .Labels "traefik.name" }}.{i:falcon.nt|agneev.ml}`)
-    extra_hosts:
-      - "host.docker.internal:10.0.0.11"
-    environment:
-      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
+      - --providers.docker.defaultRule=Host(`{{ index .Labels "traefik.name" }}.falcon.nt`)
+    # environment:
+    #   DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
     ports:
-      - 80:80
-#      - 443:443
+      - 80:80/tcp
+    #   - 443:443/tcp
     volumes:
       - /opt/appdata/traefik:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       traefik.enable: true
-      traefik.name: traefik
+      traefik.http.routers.web.rule: Host(`web.falcon.nt`) || Host(`10.0.0.11`)
       traefik.http.routers.traefik.service: api@internal
 
-  dozzle:
-    container_name: dozzle
-    image: amir20/dozzle
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    labels:
-      traefik.enable: true
-      traefik.name: logs
-
-  archivebox:
+  archive:
     container_name: archivebox
     image: archivebox/archivebox
     restart: unless-stopped
@@ -300,23 +309,31 @@ services:
       - /opt/appdata/archivebox:/data
     labels:
       traefik.enable: true
-      traefik.name: archivebox
+      traefik.name: archives
 
-  librespot:
-    container_name: librespot
-    image: agneev/librespot-java
+  syncthing:
+    container_name: syncthing
+    image: linuxserver/syncthing
     restart: unless-stopped
-    <<: *log
-    devices:
-      - /dev/snd:/dev/snd
+    network_mode: host
+    environment:
+      <<: *env
     volumes:
-      - /opt/appdata/librespot-java:/config
+     - /opt/appdata/syncthing:/config
+     #
+     - /opt/storage:/storage
+    labels:
+      traefik.enable: true
+      traefik.name: syncthing
+      traefik.http.services.syncthing.loadbalancer.server.port: 8384
 
   filebrowser:
     image: filebrowser/filebrowser
     container_name: filebrowser
     restart: unless-stopped
-    user: "1001:1001"
+    user: 1001:1001
+    healthcheck:
+      disable: true
     environment:
       FB_DATABASE: /config/database.db
       FB_DISABLE-EXEC: true
@@ -326,48 +343,14 @@ services:
       - /opt/appdata/filebrowser:/config
       #
       - ~/:/srv/home
-      - /opt/storage:/srv/storage
+      - /opt/storage:/srv/NAS
       - /opt/appdata:/srv/appdata
       - /mnt:/srv/mnt
     labels:
       traefik.enable: true
       traefik.name: files
 
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    restart: unless-stopped
-    <<: *log
-    user: "1001:1001"
-    depends_on:
-      - prometheus
-    volumes:
-      - /opt/appdata/grafana/config:/etc/grafana
-      - /opt/appdata/grafana/data:/var/lib/grafana
-    labels:
-      traefik.enable: true
-      traefik.name: grafana
-
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    restart: unless-stopped
-    user: "1001:1001"
-    <<: *log
-    command:
-#      - --storage.local.target-heap-size=
-      - --log.level=warn
-      - --config.file=/config.yml
-    environment:
-      <<: *tz
-    volumes:
-      - /opt/appdata/prometheus/prometheus.yml:/config.yml
-      - /opt/appdata/prometheus:/prometheus
-    labels:
-      traefik.enable: true
-      traefik.name: prom
-
-  shairport-sync:
+  shairport:
     container_name: shairport-sync
     image: mikebrady/shairport-sync
     restart: unless-stopped
@@ -381,206 +364,187 @@ services:
     image: linuxserver/freshrss
     container_name: freshrss
     restart: unless-stopped
-    <<: *log
     environment:
       <<: *env
+    tmpfs:
+      - /config/log:size=50m,uid=1001,gid=1001
     volumes:
       - /opt/appdata/freshrss:/config
     labels:
       traefik.enable: true
-      traefik.name: freshrss
-
-  yacht:
-    container_name: yacht
-    image: selfhostedpro/yacht:devel
-    restart: always
-    <<: *log
-    environment:
-      DISABLE_AUTH: True
-      SECRET_KEY: key
-      <<: *env
-    volumes:
-      - /opt/appdata/yacht:/config
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      traefik.enable: true
-      traefik.name: yacht
+      traefik.name: rss
 
   scrutiny:
     container_name: scrutiny
     image: ghcr.io/analogj/scrutiny
     restart: unless-stopped
+    privileged: true
     <<: *log
-    cap_add:
-      - SYS_RAWIO
     volumes:
       - /opt/appdata/scrutiny/config:/opt/scrutiny/config
-      - /opt/appdata/scrutiny/influxdb:/opt/scrutiny/influxdb
+      - /opt/appdata/scrutiny/db:/opt/scrutiny/influxdb
+
       - /run/udev:/run/udev:ro
-    devices:
-      - /dev/sda:/dev/sda:ro
-      - /dev/sdb:/dev/sdb:ro
-     # - /dev/sdc:/dev/sdc:ro
-     # - /dev/sdd:/dev/sdd:ro
-     # - /dev/sde:/dev/sde:ro
-     # - /dev/sdf:/dev/sdf:ro
+      - /dev:/dev
     labels:
       traefik.enable: true
-      traefik.name: scrutiny
+      traefik.name: drives
 
-  home-assistant:
+  hassio:
     container_name: home-assistant
     image: homeassistant/home-assistant
     restart: unless-stopped
-    network_mode: host
-    <<: *log
+    expose: ['80']
+    networks:
+      - proxy
+      - media # For Plex integration only
+      - vlan
     environment:
       <<: *tz
     volumes:
-      - /opt/appdata/home-assistant:/config
+      - /opt/appdata/homeassistant:/config
     labels:
       traefik.enable: true
-      traefik.name: home-assistant
-      traefik.http.services.home-assistant.loadbalancer.server.port: 8123
+      traefik.docker.network: proxy
 
-  node-red:
-    container_name: node-red
-    image: nodered/node-red
-    restart: unless-stopped
-    user: "1001:1001"
-    <<: *log
-    environment:
-      <<: *env
-    volumes:
-      - /opt/appdata/node-red:/data
-    labels:
-      traefik.enable: true
-      traefik.name: node-red
+      traefik.http.routers.hassio.rule: Host(`home-assistant.falcon.nt`)
+      traefik.http.routers.hassio2.rule: Host(`home-assistant-agneev.duckdns.org`)
+      traefik.http.routers.hassio3.rule: Host(`falcon.tailnet-d10c.ts.net`)
 
-  qbittorrent:
+  qbt:
     container_name: qbittorrent
-    image: hotio/qflood #:release-4.3.9--4.7.0
+    image: linuxserver/qbittorrent
+    hostname: qbittorrent
     restart: unless-stopped
-    <<: *log
     environment:
       <<: *env
+    networks:
+      - media
     volumes:
-      - /opt/appdata/qbittorrent:/config
+      - /opt/appdata/qbittorrent/lsio:/config
       - ~/scripts/qbt_post_dl.sh:/script.sh:ro
       #
-      - ~/downloads:/downloads
-      - ~/drive-local/local/qbt:/drive/local/qbt
-      - /mnt/knox:/knox
+      - /opt/storage/downloads:/downloads
+      - ~/drive-local/local/qbt:/media/local/qbt
+      - /mnt/knox/media/qbt:/local/qbt
     labels:
       traefik.enable: true
-      traefik.http.routers.qbittorrent.service: qbittorrent
-      traefik.http.routers.qbittorrent.rule: Host(`qbt.falcon.nt`)
+      traefik.name: qbt
       traefik.http.services.qbittorrent.loadbalancer.server.port: 8080
-      # Flood
-      traefik.http.routers.flood.service: flood
-      traefik.http.routers.flood.rule: Host(`flood.falcon.nt`)
-      traefik.http.services.flood.loadbalancer.server.port: 3000
+
+  flood:
+    container_name: qbittorrent-flood
+    image: jesec/flood:master
+    restart: unless-stopped
+    user: 1001:1001
+    command: --rundir /config --qburl http://qbittorrent:8080 --qbuser abc --qbpass abc
+    networks:
+      - media
+    volumes:
+      - /opt/appdata/qbittorrent/flood:/config
+      #
+      - /opt/storage/downloads:/downloads
+      - ~/drive-local/local/qbt:/media/local/qbt
+    labels:
+      traefik.enable: true
+      traefik.name: qbt-flood
 
   plex:
     container_name: plex
     image: hotio/plex
     restart: unless-stopped
-    network_mode: host
     environment:
       <<: *env
+    networks:
+      - media
+      - vlan
     tmpfs:
       - /transcode:size=4g
     volumes:
       - /opt/appdata/plex:/config
-      - /var/log/plex/logs:/config/Logs
-      #
-      - /mnt/mfs-drive:/drive
-      - /mnt/knox:/knox
+      - /mnt/mfs-drive:/media
+      - /mnt/knox/media:/local
     labels:
       traefik.enable: true
       traefik.name: plex
-      traefik.http.services.plex.loadbalancer.server.port: 32400
+      traefik.docker.network: media
 
   tautulli:
     container_name: tautulli
     image: linuxserver/tautulli
     restart: unless-stopped
-    <<: *log
-    ports:
-      - 8181:8181
     environment:
       TP_THEME: plex
       TP_SCHEME: http
       TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:tautulli
       <<: *env
+    networks:
+      - media
     volumes:
       - /opt/appdata/tautulli:/config
       - /opt/appdata/plex/Logs:/plex-logs:ro
     labels:
       traefik.enable: true
-      traefik.name: tautulli
+      traefik.name: stats.plex
 
   autoscan:
     container_name: autoscan
     image: hotio/autoscan
     restart: unless-stopped
-    <<: *log
-    ports:
-      - 100.125.93.18:3030:3030
+    depends_on:
+      - plex
     environment:
       <<: *env
+    networks:
+      - media
     volumes:
       - /opt/appdata/autoscan:/config
 
   radarr:
     container_name: radarr
-    image: linuxserver/radarr:nightly
+    image: linuxserver/radarr
     restart: unless-stopped
     <<: *log
-    depends_on:
-      - autoscan
-    ports:
-      - 7878:7878
     environment:
-      TP_THEME: onedark
-      TP_COMMUNITY_THEME: true
+      TP_THEME: dracula
+  #    TP_COMMUNITY_THEME: true
       TP_SCHEME: http
       TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:radarr
       <<: *env
+    networks:
+      - media
     volumes:
       - /opt/appdata/radarr:/config
       - ~/scripts/radarr_connect.sh:/script.sh
       #
-      - /mnt/mfs-drive:/drive
-      - /mnt/knox:/knox
+      - /mnt/mfs-drive:/media
+      - /mnt/knox/media:/local
     labels:
       traefik.enable: true
       traefik.name: radarr
 
   radarr4k:
     container_name: radarr4k
-    image: linuxserver/radarr:nightly
+    image: linuxserver/radarr
     restart: unless-stopped
     <<: *log
-    depends_on:
-     - autoscan
-    ports:
-     - 7879:7878
     environment:
-     TP_THEME: organizr
-     TP_ADDON: radarr-4k-logo
-     TP_SCHEME: http
-     TP_DOMAIN: 10.0.0.10:7070
-     DOCKER_MODS: ghcr.io/gilbn/theme.park:radarr
-     <<: *env
+      TP_THEME: organizr
+      TP_ADDON: radarr-4k-logo
+      TP_SCHEME: http
+      TP_DOMAIN: 10.0.0.10:7070
+      DOCKER_MODS: ghcr.io/gilbn/theme.park:radarr
+      <<: *env
+    networks:
+      - media
     volumes:
      - /opt/appdata/radarr4k:/config
      - ~/scripts/radarr_connect.sh:/script.sh
      #
-     - /mnt/mfs-drive:/drive
-     - /mnt/knox:/knox
+     - /mnt/mfs-drive:/media
+     - /mnt/knox/media:/local
     labels:
       traefik.enable: true
       traefik.name: radarr4k
@@ -590,22 +554,19 @@ services:
     image: linuxserver/sonarr:develop
     restart: unless-stopped
     <<: *log
-    depends_on:
-      - autoscan
-    ports:
-      - 8989:8989
     environment:
       TP_THEME: plex
       TP_SCHEME: http
       TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:sonarr
       <<: *env
+    networks:
+      - media
     volumes:
       - /opt/appdata/sonarr:/config
-      - ~/scripts/sonarr_connect.sh:/script.sh
       #
-      - /mnt/mfs-drive:/drive
-      - /mnt/knox:/knox
+      - /mnt/mfs-drive:/media
+      - /mnt/knox/media:/local
     labels:
       traefik.enable: true
       traefik.name: sonarr
@@ -615,10 +576,6 @@ services:
     image: linuxserver/sonarr:develop
     restart: unless-stopped
     <<: *log
-    depends_on:
-      - autoscan
-    ports:
-      - 8990:8989
     environment:
       TP_THEME: organizr
       TP_ADDON: sonarr-4k-logo
@@ -626,42 +583,267 @@ services:
       TP_DOMAIN: 10.0.0.10:7070
       DOCKER_MODS: ghcr.io/gilbn/theme.park:sonarr
       <<: *env
+    networks:
+      - media
     volumes:
       - /opt/appdata/sonarr4k:/config
-      - ~/scripts/sonarr_connect.sh:/script.sh
       #
-#      - /mnt/mfs-drive:/drive
-#      - /mnt/knox:/knox
+      - /mnt/mfs-drive:/media
+      - /mnt/knox/media:/local
     labels:
       traefik.enable: true
       traefik.name: sonarr4k
 
-  unpackerr:
-    container_name: unpackerr
-    image: hotio/unpackerr
-    restart: unless-stopped
-    <<: *log
-    depends_on:
-      - radarr
-      - sonarr
-#    - radarr4k
-#    - sonarr4k
-    environment:
-      UN_FOLDER_0_PATH: /drive/local/qbt
-      UN_FOLDER_0_DELETE_AFTER: 0
-      #
-      UN_SONARR_0_URL: http://sonarr:8989
-      UN_SONARR_0_API_KEY: ${SONARR_API_KEY}
-      UN_RADARR_0_URL: http://radarr:7878
-      UN_RADARR_0_API_KEY: ${RADARR_API_KEY}
-      # Sonarr4K
-#      UN_SONARR_1_URL: http://sonarr4k:8989
-#      UN_SONARR_1_API_KEY: ${SONARR4K_API_KEY}
-      # Radarr4K
-#      UN_RADARR_1_URL: http://radarr4k:7878
-#      UN_RADARR_1_API_KEY: ${RADARR4K_API_KEY}
-      <<: *env
-    tmpfs:
-      - /config:size=1m
-    volumes:
-      - ~/drive-local/local/qbt:/drive/local/qbt
+#   unpackerr:
+#     container_name: unpackerr
+#     image: golift/unpackerr
+#     restart: unless-stopped
+#     <<: *log
+#     user: "1001:1001"
+#     depends_on:
+#       - radarr
+#       - sonarr
+#       - radarr4k
+#       - sonarr4k
+#     environment:
+#       UN_FOLDER_0_PATH: /media/local/qbt
+#       UN_FOLDER_0_DELETE_AFTER: 0
+#       UN_SONARR_0_URL: http://sonarr:8989
+#       UN_SONARR_0_API_KEY: ${SONARR_API_KEY}
+#       UN_RADARR_0_URL: http://radarr:7878
+#       UN_RADARR_0_API_KEY: ${RADARR_API_KEY}
+#       UN_SONARR_1_URL: http://sonarr4k:8989
+#       UN_SONARR_1_API_KEY: ${SONARR4K_API_KEY}
+#       UN_RADARR_1_URL: http://radarr4k:7878
+#       UN_RADARR_1_API_KEY: ${RADARR4K_API_KEY}
+#     volumes:
+#       - ~/drive-local/local/qbt:/media/local/qbt
+
+#   tandoor:
+#     container_name: tandoor
+#     image: vabene1111/recipes
+#     restart: unless-stopped
+#     <<: *log
+#     environment:
+#       <<: *env
+#     volumes:
+#       - /opt/appdata/tandoor/static:/opt/recipes/staticfiles
+#       - /opt/appdata/tandoor/media:/opt/recipes/mediafiles
+#     labels:
+#       traefik.enable: true
+
+#  mealie:
+#    container_name: mealie
+#    image: hkotel/mealie
+#    restart: unless-stopped
+#    <<: *log
+#    environment:
+#      <<: *env
+#    volumes:
+#      - /opt/appdata/mealie:/app/data
+#    labels:
+#      traefik.enable: true
+#      traefik.name: mealie
+
+#   code-server:
+#     container_name: code-server
+#     image: codercom/code-server
+#     restart: unless-stopped
+#     user: "1001:1001"
+#     <<: *log
+#     volumes:
+#       - /opt/appdata/code-server/config:/home/coder/.config
+#       - /opt/appdata/code-server/data:/home/coder/.local/share/code-server
+#       #
+#       - /opt/appdata/code-server/project:/home/coder/project
+#       - ~/scripts:/home/coder/project/scripts
+#     labels:
+#       traefik.enable: true
+#       traefik.http.routers.code-server.rule: Host(`code-agneev.duckdns.org`)
+#       traefik.http.routers.code-server.middlewares: redirect-to-https@file
+#       # Traefik HTTPS router
+#       traefik.http.routers.code-server-secure.rule: Host(`code-agneev.duckdns.org`)
+#       traefik.http.routers.code-server-secure.tls.certresolver: duckdns
+
+#   photoprism:
+#     container_name: photoprism
+#     image: photoprism/photoprism
+#     restart: unless-stopped
+#     security_opt:
+#       - seccomp:unconfined
+#       - apparmor:unconfined
+#     working_dir: "/photoprism"
+#     volumes:
+#       - /opt/appdata/photoprism:/photoprism/storage
+#       - /mnt/knox/photos:/photoprism/originals
+#     environment:
+#       PHOTOPRISM_UID: 1001
+#       PHOTOPRISM_GID: 1001
+#       PHOTOPRISM_DATABASE_DRIVER: sqlite
+
+#  scrypted:
+#    container_name: scrypted
+#    image: koush/scrypted
+#    restart: unless-stopped
+#    <<: *log
+#    network_mode: host
+#    environment:
+#      <<: *tz
+#    volumes:
+#     - /opt/appdata/scrypted:/server/volume
+#    labels:
+#      traefik.enable: true
+#      traefik.name: scrypted
+#      traefik.http.services.scrypted.loadbalancer.server.port: 11080
+
+#  librespot:
+#    container_name: librespot
+#    image: agneev/librespot-alsa
+#    restart: unless-stopped
+#    command:
+#      - --name=Bedroom Speakers
+#      - --bitrate=320
+#      - --initial-volume=60
+#      - --autoplay
+#      - --disable-discovery
+#      - --username=$SPOTIFY_USERNAME
+#      - --password=$SPOTIFY_PASSWORD
+#    devices:
+#      - /dev/snd:/dev/snd
+
+#   grafana:
+#     image: grafana/grafana
+#     container_name: grafana
+#     restart: unless-stopped
+#     user: "1001:1001"
+#     depends_on:
+#       - prom
+#     # environment:
+#     #   GF_AUTH_DISABLE_LOGIN_FORM: true
+#     #   GF_AUTH_ANONYMOUS_ENABLED: true
+#     #   GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+#     #   GF_SECURITY_ALLOW_EMBEDDING: true
+#     volumes:
+#       - /opt/appdata/grafana/config:/etc/grafana
+#       - /opt/appdata/grafana/data:/var/lib/grafana
+#     labels:
+#       traefik.enable: true
+#       traefik.name: grafana
+
+#   prom:
+#     image: prom/prometheus
+#     container_name: prometheus
+#     restart: unless-stopped
+#     user: "1001:1001"
+#     command:
+#       - --log.level=warn
+#       - --config.file=/config.yml
+#     environment:
+#       <<: *tz
+#     volumes:
+#       - /opt/appdata/prometheus/prometheus.yml:/config.yml
+#       - /opt/appdata/prometheus:/prometheus
+#     labels:
+#       traefik.enable: true
+#       traefik.name: prom
+
+#   node-red:
+#     container_name: node-red
+#     image: nodered/node-red
+#     restart: unless-stopped
+#     user: "1001:1001"
+#     environment:
+#       <<: *env
+#     volumes:
+#       - /opt/appdata/node-red:/data
+#     labels:
+#       traefik.enable: true
+#       traefik.name: node-red
+
+#   duplicacy:
+#     container_name: duplicacy
+#     image: hotio/duplicacy
+#     restart: unless-stopped
+#     hostname: duplicacy
+#     environment:
+#       <<: *env
+#     expose: [3875]
+#     tmpfs:
+#       - /cache:size=200m
+#     volumes:
+#       - /opt/appdata/duplicacy:/config
+#       - /opt/appdata/duplicacy/logs:/logs
+#       - /opt/appdata/duplicacy/license.sh:/etc/cont-init.d/02-license
+#       #
+#       - /opt/appdata:/appdata
+#       - ~/:/ssd
+
+#   netdata:
+#     container_name: netdata
+#     image: netdata/netdata
+#     restart: unless-stopped
+#     hostname: falcon
+#     <<: *log
+#     cap_add:
+#       - SYS_PTRACE
+#       - SYS_ADMIN
+#     security_opt:
+#       - apparmor:unconfined
+#     ports:
+#       - 19999:19999
+#     environment:
+#       PGID: 1001
+#       NETDATA_CLAIM_TOKEN: ${NETDATA_CLAIM_TOKEN}
+#       NETDATA_CLAIM_URL: https://app.netdata.cloud
+#     volumes:
+#       - /opt/appdata/netdata/config:/etc/netdata
+#       - netdata-lib:/var/lib/netdata
+#       - netdata-cache:/var/cache/netdata
+
+#       - /etc/passwd:/host/etc/passwd:ro
+#       - /etc/group:/host/etc/group:ro
+#       - /proc:/host/proc:ro
+#       - /sys:/host/sys:ro
+#       - /etc/os-release:/host/etc/os-release:ro
+
+#       - /var/run/docker.sock:/var/run/docker.sock:ro
+#     labels:
+#       traefik.enable: true
+#       traefik.name: netdata
+
+#   librespot:
+#     container_name: librespot
+#     image: agneev/librespot-java
+#     restart: unless-stopped
+#     devices:
+#       - /dev/snd:/dev/snd
+#     volumes:
+#       - /opt/appdata/librespot-java:/config
+
+#   paperless:
+#     container_name: paperless-ngx
+#     image: linuxserver/paperless-ngx
+#     restart: unless-stopped
+#     volumes:
+#       - /opt/appdata/paperless-ngx/config:/config
+#       - /opt/appdata/paperless-ngx/data:/data
+#     environment:
+#       <<: *env
+
+#   youtubedlmaterial:
+#     container_name: youtube-dl-material
+#     image: tzahi12345/youtubedl-material
+#     restart: unless-stopped
+#     <<: *log
+#     environment:
+#       UID: 1001
+#       GID: 1001
+#     volumes:
+#       - /opt/appdata/youtube-dl-material/appdata:/app/appdata
+#       - /opt/appdata/youtube-dl-material/subscriptions:/app/subscriptions
+#       #
+#       - /opt/storage/youtube-dl:/app/video
+#       - /opt/storage/youtube-dl:/app/audio
+#     labels:
+#       traefik.enable: true
+#       traefik.name: ytdl

@@ -7,8 +7,8 @@ columns: 3
 header: true
 footer: false
 
-stylesheet:
-  - ./assets/Homer-Theme/assets/custom.css
+# stylesheet:
+#   - assets/homer-theme/assets/custom.css
 
 theme: default
 colors:
@@ -37,10 +37,16 @@ colors:
     card-shadow: "rgba(0, 0, 0, 0.4)"
     link-hover: "#ffdd57"
 
+# message:
+#   url: https://api.chucknorris.io/jokes/random
+#   mapping:
+#     title: 'updated_at'
+#     content: 'value'
+
 links:
 
   - icon: far fa-edit
-    url: http://filebrowser.always-on.nt/files/appdata/homer/config.yml
+    url: http://files.nt/files/appdata/homer/config.yml
     target: _blank
     
   - icon: fab fa-docker
@@ -49,35 +55,29 @@ links:
     
   - name: 2
     icon: fab fa-docker
-    url: http://filebrowser.always-on.nt/files/home/compose.yml
+    url: http://files.nt/files/home/compose.yml
     target: _blank
-    
-  - icon: fas fa-network-wired
-    url: http://vnstat.falcon.nt
-    target: _blank
-    
   - name: 2
     icon: fas fa-folder-open
-    url: http://filebrowser.always-on.nt/files
-    target: _blank
-    
-  - name: 2
-    icon: fas fa-align-left
-    url: http://dozzle.always-on.nt
+    url: http://files.nt/files
     target: _blank
     
   - name: 2
     icon: fas fa-traffic-light
-    url: http://traefik.always-on.nt
+    url: http://web.nt
     target: _blank
     
 #   - icon: fas fa-fire
 #     url: http://prometheus.falcon.nt
 #     target: _blank
     
+  - icon: fas fa-network-wired
+    url: http://vnstat.falcon.nt
+    target: _blank
+    
   - name: 2
     icon: fas fa-network-wired
-    url: http://vnstat.always-on.nt
+    url: http://vnstat.nt
     target: _blank
     
   - icon: fas fa-wifi
@@ -113,135 +113,164 @@ services:
     
       - name: Overseerr
         subtitle: Discover new media
-        url: http://overseerr.oc1.nt
-        logo: ./assets/homer-icons/svg/overseerr.svg
+        url: http://overseerr.falcon.nt
+        logo: assets/third-party/homer-icons/svg/overseerr.svg
+        target: _blank
+
+      - name: Tautulli
+        subtitle: Stats from Plex
+        url: http://stats.plex.falcon.nt
+        logo: assets/third-party/homer-icons/png/tautulli.png
         target: _blank
     
       - name: Radarr
         subtitle: Manage HD movies
         url: http://radarr.falcon.nt
-        logo: ./assets/homer-icons/png/radarr.png
+        logo: assets/third-party/homer-icons/png/radarr.png
         target: _blank
 
       - name: Radarr4K
         subtitle: Manage 4K movies
         url: http://radarr4k.falcon.nt
-        logo: ./assets/custom/radarr4k.png
+        logo: assets/custom/radarr4k.png
         target: _blank
 
       - name: Sonarr
         subtitle: Manage HD TV Shows
         url: http://sonarr.falcon.nt
-        logo: ./assets/homer-icons/svg/sonarr.svg
+        logo: assets/third-party/homer-icons/svg/sonarr.svg
         target: _blank
 
       - name: Sonarr4K
         subtitle: Manage 4K TV Shows
         url: http://sonarr4k.falcon.nt
-        logo: ./assets/custom/sonarr4k.png
+        logo: assets/custom/sonarr4k.png
         target: _blank
-
+    
+      - name: Flood
+        subtitle: Next-gen torrent GUI
+        url: http://qbt-flood.falcon.nt
+        logo: assets/third-party/homer-icons/png/flood.png
+        target: _blank
+        
       - name: Plex
         subtitle: Media server
         url: http://plex.falcon.nt/web/index.html
-        logo: ./assets/homer-icons/png/plex.png
+        logo: assets/third-party/homer-icons/png/plex.png
         target: _blank
 
-      - name: Bazarr
-        subtitle: Subtitles for HD media
-        url: http://bazarr.oc1.nt
-        logo: ./assets/homer-icons/svg/bazarr.svg
-        target: _blank
 
   - name: Applications
     icon: fas fa-rocket
     items:
 
-      - name: ArchiveBox
-        subtitle: Archive websites with ease
-        url: http://archivebox.falcon.nt/admin/core/snapshot/
-        logo: ./assets/homer-icons/png/archivebox.png
-        target: _blank
+    #   - name: Code-server
+    #     subtitle: Edit code in a browser
+    #     url: https://code.agneev.ml
+    #     logo: assets/custom/code-server.png
+    #     target: _blank
 
-      - name: Code-server
-        subtitle: Write code in browser
-        url: http://code.falcon.nt
-        logo: ./assets/custom/code-server.png
-        target: _blank
+    #   - name: Grafana
+    #     subtitle: Visualize metrics
+    #     url: http://grafana.falcon.nt
+    #     logo: assets/third-party/homer-icons/png/grafana.png
+    #     target: _blank
 
-      - name: Grafana
-        subtitle: Visualize metrics
-        url: http://grafana.falcon.nt
-        logo: ./assets/homer-icons/png/grafana.png
-        target: _blank
-
-      - name: Tautulli
-        subtitle: Statistics for Plex
-        url: http://tautulli.falcon.nt
-        logo: ./assets/homer-icons/png/tautulli.png
+      - name: Web Net Tools
+        subtitle: Network diagnostic tools
+        url: http://diagnostics.nt
         target: _blank
 
       - name: Home Assistant
         subtitle: Next-gen smart home
         url: http://home-assistant.falcon.nt
-        logo: ./assets/custom/home-assistant.png
+        logo: assets/custom/home-assistant.png
         target: _blank
         
       - name: Homebridge
         subtitle: HomeKit all things
-        url: http://homebridge.always-on.nt
-        logo: ./assets/homer-icons/png/homebridge.png
+        url: http://homebridge.nt
+        logo: assets/third-party/homer-icons/png/homebridge.png
         target: _blank
         
       - name: FreshRSS
         subtitle: Reading for days
-        url: http://freshrss.falcon.nt
-        logo: ./assets/homer-icons/png/freshrss.png
+        url: http://rss.falcon.nt
+        logo: assets/third-party/homer-icons/png/freshrss.png
         target: _blank
-        
+
+    #   - name: YouTube-DL Material
+    #     subtitle: Store YT videos locally
+    #     url: http://youtube-dl.falcon.nt
+    #     # logo: assets/third-party/homer-icons/png/grafana.png
+    #     target: _blank
+
+      - name: MeTube
+        subtitle: Store YT videos locally
+        url: http://ytdl.falcon.nt
+        # logo: assets/third-party/homer-icons/png/grafana.png
+        target: _blank
+
+      - name: SFTP-go
+        subtitle: SFTP/WebDAV web GUI
+        url: http://sftp-go.falcon.nt
+        # logo: assets/third-party/homer-icons/png/grafana.png
+        target: _blank
+
   - name: Manage
     icon: fas fa-user-shield
     items:
 
       - name: Portainer
         subtitle: Advanced Docker GUI
-        url: http://portainer.always-on.nt
-        logo: ./assets/homer-icons/png/portainer.png
+        url: http://portainer.nt
+        logo: assets/third-party/homer-icons/png/portainer.png
         target: _blank
 
-      - name: pgAdmin
-        subtitle: PostgreSQL admin GUI
-        url: http://pgadmin.falcon.nt
-        logo: ./assets/homer-icons/png/pgadmin.png
+      - name: Netmaker
+        subtitle: Self-hosted Wireguard VPN
+        url: https://dash.nm.jaydns.de/login
         target: _blank
+
+    #   - name: pgAdmin
+    #     subtitle: PostgreSQL admin GUI
+    #     url: http://pgadmin.falcon.nt
+    #     logo: assets/third-party/homer-icons/png/pgadmin.png
+    #     target: _blank
 
       - name: Dozzle
-        subtitle: Container logs
-        url: http://dozzle.falcon.nt
-        logo: ./assets/homer-icons/png/dozzle.png
+        subtitle: Docker container logs
+        url: http://logs.nt
+        logo: assets/third-party/homer-icons/png/dozzle.png
         target: _blank
         
       - name: Traefik
         subtitle: Docker network proxy
         url: http://traefik.falcon.nt/dashboard/
-        logo: ./assets/homer-icons/png/traefik.png
+        logo: assets/third-party/homer-icons/png/traefik.png
         target: _blank
 
-      - name: Netdata (falcon)
-        url: http://netdata.falcon.nt/#after=-300;before=0"
-        logo: ./assets/homer-icons/png/netdata.png
+      - name: Smokeping
+        subtitle: Monitor network hosts
+        url: http://smokeping.nt
+        logo: assets/custom/monitor.png
         target: _blank
+
+    #   - name: Netdata (falcon)
+    #     url: http://netdata.falcon.nt/#after=-300;before=0"
+    #     logo: assets/third-party/homer-icons/png/netdata.png
+    #     target: _blank
         
-      - name: Netdata (always-on)
-        url: http://netdata.always-on.nt/#after=-300;before=0"
-        logo: ./assets/custom/netdata-alt.png
-        target: _blank
+    #   - name: Netdata (always-on)
+    #     url: http://netdata.nt/#after=-300;before=0"
+    #     logo: assets/custom/netdata-alt.png
+    #     target: _blank
     
-      - name: Yacht
-        subtitle: Material UI Docker manager
-        url: http://yacht.falcon.nt
-        logo: ./assets/homer-icons/png/yacht.png
-        target: _blank
+    #   - name: Yacht
+    #     subtitle: Material UI Docker manager
+    #     url: http://yacht.falcon.nt
+    #     logo: assets/third-party/homer-icons/png/yacht.png
+    #     target: _blank
 
   - name: Network
     icon: fas fa-project-diagram
@@ -249,83 +278,90 @@ services:
 
       - name: AdGuard Home
         subtitle: Network DNS/DHCP server
-        url: http://adguard.always-on.nt
-        logo: ./assets/homer-icons/svg/adguardhome.svg
+        url: http://dns.nt/
+        logo: assets/third-party/homer-icons/svg/adguardhome.svg
         target: _blank
+
+    #   - name: PowerDNS
+    #     subtitle: Fast recursor
+    #     url: http://pdns.nt/
+    #     logo: assets/custom/powerdns.png
+    #     target: _blank
+        
+    #   - name: DNSDist
+    #     subtitle: DNS load-balancer
+    #     url: http://dns-lb.nt/
+    #     logo: assets/custom/powerdns.png
+    #     target: _blank
         
       - name: Speedtest tracker
         subtitle: Automated speed tests
-        url: http://speedtest.always-on.nt
-        logo: ./assets/custom/speedtest-tracker.png
+        url: http://speedtest.nt
+        logo: assets/custom/speedtest-tracker.png
         target: _blank
 
       - name: Router
-        subtitle: Stats from router Netdata
+        subtitle: Metrics from router Netdata
         url: http://routerlogin.net:19999/#menu_net_submenu_eth0;theme=slate;help=false
-        logo: ./assets/homer-icons/png/netdata.png
+        logo: assets/third-party/homer-icons/png/netdata.png
         target: _blank
         
       - name: Router vnstat
         subtitle: Internet usage graphs
         url: http://vnstat.router.nt
+        logo: assets/custom/vnstat.png
         target: _blank
     
-      - name: Uptime-kuma
-        subtitle: Service monitoring
-        url: http://uptime-kuma.always-on.nt
-        logo: ./assets/custom/uptime-kuma.svg
-        target: _blank
+    #   - name: Uptime-kuma
+    #     subtitle: Service monitoring
+    #     url: http://uptime-kuma.nt
+    #     logo: assets/custom/uptime-kuma.svg
+    #     target: _blank
         
       - name: OpenSpeedTest
         subtitle: LAN speed tests
-        url: http://openspeedtest.always-on.nt:9999/
-        logo: ./assets/homer-icons/png/openspeedtest.png
+        url: http://always-on.nt:9999/
+        logo: assets/third-party/homer-icons/png/openspeedtest.png
         target: _blank
 
   - name: Files
     icon: fas fa-server
     items:
 
+      - name: Syncthing
+        subtitle: Effortless files syncing
+        url: http://syncthing.falcon.nt
+        logo: assets/third-party/homer-icons/png/syncthing.png
+        target: _blank
+
       - name: File Browser
         subtitle: Manage files on NAS
         url: http://files.falcon.nt
-        logo: ./assets/homer-icons/svg/filebrowser.svg
+        logo: assets/third-party/homer-icons/svg/filebrowser.svg
         target: _blank
         
       - name: aria2
         subtitle: HTTP downloader
         url: http://aria2.falcon.nt
-        logo: ./assets/homer-icons/png/ariang.png
-        target: _blank
-
-      - name: Flood
-        subtitle: Next-gen torrent GUI
-        url: http://flood.falcon.nt
-        logo: ./assets/homer-icons/png/flood.png
+        logo: assets/third-party/homer-icons/png/ariang.png
         target: _blank
 
       - name: qBittorrent
         subtitle: Best torrent client
         url: http://qbt.falcon.nt
-        logo: ./assets/homer-icons/png/qbittorrent.png
+        logo: assets/third-party/homer-icons/png/qbittorrent.png
         target: _blank
-
-      - name: Duplicacy
-        subtitle: Incremental backups
-        url: http://duplicacy.falcon.nt
-        logo: ./assets/homer-icons/png/duplicacy.png
+        
+      - name: ArchiveBox
+        subtitle: Archive websites with ease
+        url: http://archive.falcon.nt/admin/core/snapshot/
+        logo: assets/third-party/homer-icons/png/archivebox.png
         target: _blank
-
-    #   - name: Syncthing
-    #     subtitle: Effortless files syncing
-    #     url: http://syncthing.falcon.nt
-    #     logo: ./assets/homer-icons/png/syncthing.png
-    #     target: _blank
-    
-    #   - name: Stash
-    #     subtitle: Your special media files
-    #     logo: ./assets/homer-icons/png/stash.png
-    #     url: "http://stash.falcon.nt/scenes/?c={%22type%22:%22title%22,%22value%22:%22(compilation|best\\%20of)%22,%22modifier%22:%22NOT_MATCHES_REGEX%22}&perPage=30&sortby=random&sortdir=desc"
+        
+    #   - name: Duplicacy
+    #     subtitle: Incremental backups
+    #     url: http://duplicacy.falcon.nt
+    #     logo: assets/third-party/homer-icons/png/duplicacy.png
     #     target: _blank
 
   - name: Tools
@@ -334,38 +370,44 @@ services:
 
       - name: Prowlarr
         subtitle: Indexer manager
-        url: http://prowlarr.oc1.nt
-        logo: ./assets/homer-icons/svg/prowlarr.svg
+        url: http://prowlarr.oc2.nt
+        logo: assets/third-party/homer-icons/svg/prowlarr.svg
         target: _blank
 
       - name: Scrutiny
         subtitle: Visualized SMART data
-        url: http://scrutiny.falcon.nt
-        logo: ./assets/homer-icons/png/scrutiny.png
+        url: http://drives.falcon.nt
+        logo: assets/third-party/homer-icons/png/scrutiny.png
         target: _blank
         
-      - name: Prometheus
-        subtitle: Metrics collector
-        url: http://prometheus.falcon.nt
-        logo: ./assets/homer-icons/png/prometheus.png
-        target: _blank
+    #   - name: Prometheus
+    #     subtitle: Metrics collector
+    #     url: http://prom.falcon.nt
+    #     logo: assets/third-party/homer-icons/png/prometheus.png
+    #     target: _blank
 
       - name: Node-RED
         subtitle: Programming tool
-        url: http://node-red.falcon.nt
-        logo: ./assets/homer-icons/png/nodered.png
+        url: http://nodered.falcon.nt
+        logo: assets/third-party/homer-icons/png/nodered.png
+        target: _blank
+        
+      - name: Bazarr
+        subtitle: Subtitles for HD media
+        url: http://bazarr.falcon.nt
+        logo: assets/third-party/homer-icons/svg/bazarr.svg
         target: _blank
 
       - name: Bazarr4K
         subtitle: Subtitles for 4K media
-        url: http://bazarr4k.oc1.nt
-        logo: ./assets/homer-icons/svg/bazarr.svg
+        url: http://bazarr4k.falcon.nt
+        logo: assets/third-party/homer-icons/svg/bazarr.svg
         target: _blank
 
       - name: Jackett
         subtitle: All indexers in one place
-        url: http://jackett.oc1.nt
-        logo: ./assets/homer-icons/png/jackett.png
+        url: http://jackett.oc2.nt
+        logo: assets/third-party/homer-icons/png/jackett.png
         target: _blank
 
     #   - name: Petio
@@ -377,24 +419,18 @@ services:
     #     - name: Chronograf
     #       subtitle: "Metrics visualizations"
     #       url: http://chronograf.falcon.nt
-    #       logo: ./assets/homer-icons/png/chronograf.png
-    #       target: _blank
-        
-    #     - name: Smokeping
-    #       subtitle: "Graph network latency"
-    #       url: http://smokeping.always-on.nt/smokeping/?target=DNSPing"
-    #       logo: ./assets/custom/monitor.png
+    #       logo: assets/third-party/homer-icons/png/chronograf.png
     #       target: _blank
 
     #     - name: InfluxDB
     #       subtitle: "Modern metrics recorder"
     #       url: http://influxdb.falcon.nt
-    #       logo: ./assets/custom/influxdb.png
+    #       logo: assets/custom/influxdb.png
     #       target: _blank
 
     #     - name: Cockpit
     #       subtitle: "Server manager"
     #       url: http://cockpit.falcon.nt:9090/
-    #       logo: ./assets/homer-icons/png/cockpit.png
+    #       logo: assets/third-party/homer-icons/png/cockpit.png
     #       target: _blank
 

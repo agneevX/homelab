@@ -1,22 +1,15 @@
 [Unit]
-Description = mergerFS rclone drive-crypt mount
+Description = mergerFS media combined mount
 
 [Service]
 Type = forking
-ExecStart=/usr/bin/mergerfs \
-	/home/agneev/drive-local:/mnt/rc-crypt:/mnt/oc1-drive:/mnt/oc2-drive \
-	/mnt/mfs-drive \
-	-o defaults \
-	-o allow_other \
-	-o use_ino \
-	-o func.getattr=newest \
-	-o dropcacheonclose=true \
-	-o cache.files=auto-full \
-	-o category.action=all \
-	-o category.create=ff \
-	-o fsname=mfs-drive
 
-ExecStop = /bin/fusermount -uz /mnt/mfs-drive
+ExecStart = mergerfs \
+	/home/agneev/drive-local:/mnt/rc-crypt:/mnt/vps/*:/mnt/media-drive/media /mnt/mfs-drive \
+	-o defaults,allow_other,dropcacheonclose=true,func.getattr=newest,category.action=all,category.create=ff,fsname=mfs-drive \
+	-o cache.files=auto-full,cache.readdir=true,cache.entry=120,cache.attr=120,cache.statfs=10
+
+ExecStop = fusermount -uz /mnt/mfs-drive
 
 [Install]
 WantedBy = multi-user.target
