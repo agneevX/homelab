@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-env: &env
   PGID: 1001
   PUID: 1001
@@ -8,174 +6,85 @@ x-env: &env
 
 services:
 
-  vaultwarden:
-    image: vaultwarden/server
-    container_name: vaultwarden
+  overseerr:
+    container_name: overseerr
+    image: linuxserver/overseerr
     restart: unless-stopped
     environment:
-      SIGNUPS_ALLOWED: "false"
-      INVITATIONS_ALLOWED: "false"
+      <<: *env
     volumes:
-      - /opt/appdata/vaultwarden:/data
-#    labels:
-#      traefik.http.routers.vaultwarden.tls: true
+      - ./overseerr:/config
 
-  jackett:
-    container_name: jackett
-    image: hotio/jackett
+  iperf3:
+    container_name: iperf3
+    image: taoyou/iperf3-alpine
     restart: unless-stopped
     ports:
-      - 100.83.6.75:9117:9117
-    environment:
-      <<: *env
-    volumes:
-      - /opt/appdata/jackett:/config
+      - 5201:5201/tcp
+      - 5201:5201/udp
 
-  qbit-manage:
-    container_name: qbit-manage
-    image: hotio/qbitmanage
-    environment:
-#      ARGS
-      <<: *env
-    volumes:
-      - /opt/appdata/qbit-manage:/config
-
-  plextraktsync:
-    container_name: plextraktsync
-    image: ghcr.io/taxel/plextraktsync
+  vnstat:
+    image: vergoh/vnstat
+    container_name: vnstat
     restart: unless-stopped
-    user: "1001:1001"
-    command: watch
+    network_mode: host
     environment:
-      PTS_LOG_DIR: /logs
+      SERVER_NAME: oracle1
+      HTTP_PORT: 7000
+      LARGE_FONTS: 1
+      HTTP_LOG: /dev/null
       TZ: Asia/Kolkata
-    tmpfs:
-      - /logs:size=10m,uid=1001,gid=1001
     volumes:
-      - /opt/appdata/plextraktsync:/app/config
+      - /opt/appdata/vnstat/vnstat.conf:/etc/vnstat.conf
+      - /opt/appdata/vnstat:/var/lib/vnstat
+    labels:
+      traefik.http.services.vnstat.loadbalancer.server.port: 7000
 
-  bazarr4k:
-    container_name: bazarr4k
-    image: linuxserver/bazarr
-    restart: unless-stopped
-    extra_hosts:
-      - "radarr4k.falcon.nt:100.120.109.59"
-      - "sonarr4k.falcon.nt:100.120.109.59"
-    environment:
-      DOCKER_MODS: ghcr.io/gilbn/theme.park:bazarr
-      TP_THEME: aquamarine
-      <<: *env
-    volumes:
-      - /opt/appdata/bazarr4k:/config
-      - /mnt/mfs-drive:/drive
-
-  traefik:
-    container_name: traefik
+  traefik-home:
+    container_name: traefik-home
     image: traefik
     restart: unless-stopped
+    command:
+      - --global.checknewversion=false
+      - --global.sendanonymoususage=false
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service" }}.oc1.nt`)
+    extra_hosts:
+      - "host.docker.internal:10.0.0.15"
     ports:
-      - 90:90
-      - 443:443
-      - 8000:8080
+      - 90:80
+      - 8090:8080
     volumes:
-      - /opt/appdata/traefik:/etc/traefik
       - /var/run/docker.sock:/var/run/docker.sock:ro
-
-#  dozzle:
-#    container_name: dozzle
-#    image: amir20/dozzle
-#    restart: unless-stopped
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock:ro
 
   unpackerr:
     container_name: unpackerr
-    image: hotio/unpackerr
+    image: golift/unpackerr
     restart: unless-stopped
-    extra_hosts:
-      - "radarr.falcon.nt:100.120.109.59"
-      - "radarr4k.falcon.nt:100.120.109.59"
-      - "sonarr.falcon.nt:100.120.109.59"
-      - "sonarr4k.falcon.nt:100.120.109.59"
     environment:
       # Sonarr
-      UN_SONARR_0_URL: http://sonarr.falcon.nt
-      UN_SONARR_0_API_KEY: 
+      UN_SONARR_0_URL: http://falcon.tailnet-d10c.ts.net:8989
+      UN_SONARR_0_API_KEY: ${SONARR_API_KEY}
       # Sonarr4K
-      UN_SONARR_1_URL: http://sonarr4k.falcon.nt
-      UN_SONARR_1_API_KEY: 
+      UN_SONARR_1_URL: http://falcon.tailnet-d10c.ts.net:8990
+      UN_SONARR_1_API_KEY: ${SONARR4K_API_KEY}
       # Radarr
-      UN_RADARR_0_URL: http://radarr.falcon.nt
-      UN_RADARR_0_API_KEY: 
-      # Radarr4k
-      UN_RADARR_1_URL: http://radarr4k.falcon.nt
-      UN_RADARR_1_API_KEY: 
-    tmpfs:
-      - /config:size=1m
-    volumes:
-      - /home/ubuntu/drive-local/local/qbt:/drive/local/qbt
-
-  adguard-home:
-    container_name: adguard-home
-    image: adguard/adguardhome
-    restart: unless-stopped
-    network_mode: host
-    healthcheck:
-      test: "/bin/netstat -pant 2> /dev/null | /bin/grep 53 > /dev/null"
-    volumes:
-      - /opt/appdata/adguardhome/workdir:/opt/adguardhome/work
-      - /opt/appdata/adguardhome/config:/opt/adguardhome/conf
-
-  prowlarr:
-    container_name: prowlarr
-    image: linuxserver/prowlarr:nightly
-    restart: unless-stopped
-    ports:
-      - 100.83.6.75:9696:9696
-    environment:
-      TP_THEME: dracula
-      DOCKER_MODS: ghcr.io/gilbn/theme.park:prowlarr
+      UN_RADARR_0_URL: http://falcon.tailnet-d10c.ts.net:7878
+      UN_RADARR_0_API_KEY: ${RADARR_API_KEY}
+      # Radarr4K
+      UN_RADARR_1_URL: http://falcon.tailnet-d10c.ts.net:7879
+      UN_RADARR_1_API_KEY: ${RADARR4K_API_KEY}
       <<: *env
     volumes:
-      - /opt/appdata/prowlarr:/config
-
-  overseerr:
-    container_name: overseerr
-    image: hotio/overseerr:nightly
-    restart: unless-stopped
-    extra_hosts:
-      - "radarr.falcon.nt:100.120.109.59"
-      - "radarr4k.falcon.nt:100.120.109.59"
-      - "sonarr.falcon.nt:100.120.109.59"
-      - "sonarr4k.falcon.nt:100.120.109.59"
-      - "tautulli.falcon.nt:100.120.109.59"
-    environment:
-      <<: *env
-    volumes:
-      - /opt/appdata/overseerr:/config
-
-  bazarr:
-    container_name: bazarr
-    image: linuxserver/bazarr
-    restart: unless-stopped
-    extra_hosts:
-      - "radarr.falcon.nt:100.120.109.59"
-      - "sonarr.falcon.nt:100.120.109.59"
-    environment:
-      DOCKER_MODS: ghcr.io/gilbn/theme.park:bazarr
-      TP_THEME: organizr
-      <<: *env
-    volumes:
-      - /opt/appdata/bazarr:/config
-      - /mnt/mfs-drive:/drive
+      - ~/drive-local/local/qbt:/media/local/qbt
 
   qbittorrent:
     container_name: qbittorrent
-    image: hotio/qflood:release-4.3.9--4.7.0
+    image: linuxserver/qbittorrent
     restart: unless-stopped
     ports:
-      - 100.83.6.75:8100:8080
-      - 100.83.6.75:8101:3000
+      - 8100:8080
       - 32044:32044/tcp
       - 32044:32044/udp
     environment:
@@ -183,5 +92,7 @@ services:
     volumes:
       - /opt/appdata/qbittorrent:/config
       #
-      - /home/ubuntu/drive-local/local/qbt:/drive/local/qbt
-      - /home/ubuntu/scripts/qbt.sh:/script.sh:ro
+      - ~/drive-local/local/qbt:/media/local/qbt
+      - ~/scripts/qbt.sh:/script.sh:ro
+    labels:
+      traefik.http.services.qbittorrent.loadbalancer.server.port: 8080
