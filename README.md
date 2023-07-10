@@ -15,7 +15,7 @@ My servers setup at home
 
 ## Hardware
 
-I run two Raspberry Pi 4s' as servers currently.
+I run two Raspberry Pi 4Bs as servers currently.
 
 ### NAS/media server
 
@@ -23,17 +23,18 @@ I run two Raspberry Pi 4s' as servers currently.
 
 `falcon`
 
-- ⚡ Raspberry Pi 4 (8GB model)
+- ⚡ Raspberry Pi 4B (8GB model)
   - Ubuntu Server 22.04 LTS
   - Overclocked to 2.0GHz
 - 🔌 Powered USB 3.0 hub
   - TP-Link TL-UH700
 - 📼 Primary storage
   - Sandisk Ultra microSD card (8GB, boot)
-  - Crucial BX500 SSD (480GB, root)
+  - Crucial BX500 SSD (480GB, root FS)
 - 📀 Secondary storage
-  - Seagate Expansion 4TB
+  - Crucial BX500 SSD (480GB)
   - Seagate Barracuda 2.5" 1TB
+  - Seagate Expansion 4TB
   - WD My Passport 1TB
   - Sony HD-B1 1TB
 - 🌐 Gigabit ethernet
@@ -41,16 +42,15 @@ I run two Raspberry Pi 4s' as servers currently.
 - 🔊 3.5mm out...
   - Fenda E200 Plus
 
-Main server that runs the majority of my self-hosted apps, functions as a NAS and audio server using `librespot`, `shairport-sync`, and `mpv`.
+Main server that runs the majority of my self-hosted apps, runs the media stack, functions as a NAS and audio server using the likes of `librespot`, `shairport-sync`, and `mpv`.
 
-Runs (mostly in Docker):
+Runs in Docker containers:
 
 [🔗 **Docker Compose**](./docker-compose/falcon.yml)
 
 - 💡 [Home Assistant](https://github.com/agneevx/my-ha-setup)
-- � Grafana/Prometheus
 - �📽 Plex Media Server
-- 📺 Sonarr/Radarr
+- 📺 Servarr media stack
 - 🧲 qBittorrent
 
 ### DNS/proxy server
@@ -64,17 +64,17 @@ Runs (mostly in Docker):
 - 📼 32GB microSD card
 - 🌐 Gigabit ethernet
 
-[DNS/DHCP server](#DNS), also handles the Traefik network proxy over Tailscale, more on that below.
+[DNS/DHCP server](#dns), monitors network latency and speed using tools like Smokeping and Speedtest-tracker, handles the Traefik network proxy over Tailscale. Also runs Portainer, which is used to monitor Docker hosts across all machines, cloud or local.
 
-Since this server runs on a SD card, `log2ram` is used to store certain logs in-memory to reduce writes.
+Since this server runs on a SD card, `log2ram` is used to store system logs in memory to reduce writes to disk.
 
-Runs (mostly in Docker):
+Runs in Docker containers:
 
 [🔗 **Docker Compose**](./docker-compose/always-on.yml)
 
 ### Cloud VMs
 
-- Oracle Cloud (A1 Compute)
+- Oracle Cloud
 - Google Cloud Platform (`e2-micro`)
 - Digital Ocean Droplets
 
@@ -84,9 +84,11 @@ Runs (mostly in Docker):
 
 ### DNS
 
-[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) manages DNS and DHCP, as well as acts as the content-blocker in the network.
+[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) blocks ads and trackers, manages DNS and DHCP in the local network.
 
-I use Cloudflare Gateway DNS over DNS-over-HTTPS, which is similar to 1.1.1.1 but supports EDNS Client Subnet in addition to it being a managed DNS service.
+For DNS resolution, I use Cloudflare Zero Trust over DoH3, which is similar to 1.1.1.1 but supports EDNS Client Subnet, which enables devices to connect to servers located closer to me and thus makes stuff load faster.
+
+AdGuard has optimistic caching enabled which accelerates web page loading due to low latency lookups.
 
 <!-- ![feb-2022-archive](https://user-images.githubusercontent.com/19761269/155761364-908e0759-6703-449c-8ca7-54a9c92b9478.png) -->
 
@@ -96,7 +98,7 @@ I use Cloudflare Gateway DNS over DNS-over-HTTPS, which is similar to 1.1.1.1 bu
 
 ## Unified access
 
-I use Tailscale to access all devices and services. All cloud VMs have their storages mounted locally using NFS, securely.
+I use Tailscale to access devices and services. Cloud VMs have their storages securely mounted locally over NFS or FTP.
 
 Some apps are hosted in cloud to balance system resources. I use Traefik to access them as if they're hosted locally, using the format `http://<app>.<machine>.nt`.
 
@@ -106,29 +108,6 @@ This requires Traefik and containers on all VMs, with Traefik routers created lo
 
 Files are stored both in the cloud and locally.
 
-### Cloud storage
+### Media storage
 
-[rclone](https://github.com/rclone/rclone) is used to communicate with various cloud storages.
-
-During system startup, two systemd files mount rclone remotes to [`/mnt/rc-drive`](./systemd/rc-drive.service) and [`/mnt/rc-crypt`](./systemd/rc-crypt.service) and caches the entire file structure in memory.
-
-Another systemd file uses mergerFS to create a mount at [`/mnt/mfs-drive`](./systemd/mfs-drive.service) that combines the above two mount points with another local folder, that way all new files are created locally.
-
-```sh
-# SSD cache
-/home/../drive-local ->-|
-/mnt/rc-drive  ---->----|
-/mnt/rc-crypt  ---->----|
-# NFS mounts over Tailscale
-/mnt/oc*-drive ---->----|
-                        |
-/mnt/mfs-drive  <-------|
-```
-
-At 6AM everyday, a cron job runs a script that moves local content to the cloud.
-
-### Local storage
-
-Also at startup, mergerFS combines all external drives and creates a single mount point at `/mnt/mfs-knox` using a systemd mount file.
-
-All disks are formatted in `ext4` (with no reserved space) and mounted inside `/mnt/pool` using fstab entries.
+mergerfs is used to pool together local drive mounts so they appear as a single mount that can be bind-mounted to Docker containers.

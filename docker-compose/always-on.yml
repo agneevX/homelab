@@ -44,14 +44,21 @@ networks:
 
 services:
 
-##### ----- DNS services ----- #####
+  dpiproxy:
+    container_name: dpi-proxy
+    image: hectorm/demergi
+    restart: unless-stopped
+    command: --dns-mode plain
+    ports:
+      - 2000:8080
 
   adguard:
     container_name: adguard
-    image: adguard/adguardhome:v0.107.21
+    image: adguard/adguardhome:v0.107.29
     restart: unless-stopped
-    command: "--config /config/config.yml --work-dir /config --no-check-update"
     expose: ['80']
+    healthcheck:
+      disable: true
     environment:
       <<: *tz
     networks:
@@ -59,28 +66,25 @@ services:
       vlan:
         ipv4_address: 10.0.0.99
     volumes:
-      - /opt/appdata/adguardhome:/config
+     - /opt/appdata/adguardhome/data:/opt/adguardhome/work
+     - /opt/appdata/adguardhome/config:/opt/adguardhome/conf
     labels:
       traefik.enable: true
       traefik.name: dns
       traefik.docker.network: dns
-      traefik.http.services.adguardhome.loadbalancer.server.port: 80
-      traefik.http.routers.adguardhome.middlewares: adguardhome-themepark@file
+      traefik.http.services.adguard.loadbalancer.server.port: 80
+      traefik.http.routers.adguard.middlewares: adguard-themepark
+      traefik.http.middlewares.adguard-themepark.plugin.rewritebody.rewrites.regex: </head>
+      traefik.http.middlewares.adguard-themepark.plugin.rewritebody.rewrites.replacement: <link href="http://10.0.0.10:7070/css/base/adguard/nord.css" rel="stylesheet" type="text/css" </head>
+      traefik.http.middlewares.adguard-themepark.plugin.rewritebody.rewrites.type: text/html
 
-  dnscache:
-    container_name: dns-cache
-    image: hezhijie0327/dnsproxy
-    restart: unless-stopped
-    command:
-      - --upstream=https://xxxxx.cloudflare-gateway.com/dns-query
-      - --bootstrap=8.8.8.8
-      - --cache
-      - --cache-optimistic
-      - --cache-size=64000000
-    networks:
-      - dns
-
-##### -------------------- #####
+#  webtools:
+#    container_name: web-tools
+#    image: agneev/webnet-tools
+#    restart: unless-stopped
+#    labels:
+#      traefik.enable: true
+#      traefik.name: netdiags
 
   iperf3:
     container_name: iperf3
@@ -96,25 +100,33 @@ services:
     restart: unless-stopped
     privileged: true
     environment:
+      DASHDOT_NETWORK_SHOWN_DATAPOINTS: 30
+      DASHDOT_SPEED_TEST_INTERVAL: 1440
+
       DASHDOT_PAGE_TITLE: dash. - always-on
+
       DASHDOT_ENABLE_CPU_TEMPS: true
       DASHDOT_ENABLE_STORAGE_SPLIT_VIEW: true
       DASHDOT_ALWAYS_SHOW_PERCENTAGES: true
-      DASHDOT_RAM_LABEL_LIST: size,type,frequency
       DASHDOT_ACCEPT_OOKLA_EULA: true
     ports:
-      - 81:3001
+      - 90:3001
     volumes:
       - /:/mnt/host:ro
     labels:
       traefik.enable: true
-      traefik.name: sys
+      traefik.http.routers.dashdot.rule: Host(`always-on.nt`)
 
   smokeping:
     container_name: smokeping
     image: linuxserver/smokeping:2.7.3-r5-ls12
     restart: unless-stopped
-    hostname: ping-agneev.duckdns.org
+    dns:
+      - 8.8.8.8
+    networks:
+      proxy:
+      vlan:
+        ipv4_address: 10.0.0.97
     environment:
       <<: *env
     volumes:
@@ -122,7 +134,14 @@ services:
       - /var/log/smokeping_data:/data
     labels:
       traefik.enable: true
+      traefik.docker.network: proxy
       traefik.http.routers.smokeping.rule: Host(`smokeping.nt`) || Host(`ping-agneev.duckdns.org`)
+      traefik.http.routers.smokeping.middlewares: smokeping-redirect,smokeping-themecolor
+      traefik.http.middlewares.smokeping-redirect.redirectRegex.regex: \/$
+      traefik.http.middlewares.smokeping-redirect.redirectRegex.replacement: /smokeping/?target=isp-network.wan-gateway
+      traefik.http.middlewares.smokeping-themecolor.plugin.rewritebody.rewrites.regex: </head>
+      traefik.http.middlewares.smokeping-themecolor.plugin.rewritebody.rewrites.replacement: <meta name="theme-color" content="#4C4C4C"> </head>
+      traefik.http.middlewares.smokeping-themecolor.plugin.rewritebody.rewrites.type: text/html
 
   themepark:
     container_name: theme.park
@@ -141,9 +160,9 @@ services:
     image: amir20/dozzle
     restart: always
     environment:
-      DOZZLE_REMOTE_HOST: tcp://falcon:2375,tcp://oracle1:2375,tcp://oc-bom1:2375,tcp://gcp1:2375
-      DOZZLE_USERNAME: 
-      DOZZLE_PASSWORD: 
+      DOZZLE_REMOTE_HOST: tcp://falcon:2375,tcp://oc-bom1:2000,tcp://gcp1:2375
+      DOZZLE_USERNAME: ${DOZZLE_USERNAME}
+      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD}
       DOZZLE_NO_ANALYTICS: true
     ports:
       - 8000:8080
@@ -179,10 +198,9 @@ services:
       traefik.name: vnstat
       traefik.http.services.vnstat.loadbalancer.server.port: 7000
 
-  vnstatrouter:
+  vnstat2:
     container_name: vnstat-router
     image: vergoh/vnstat
-    restart: unless-stopped
     environment:
       SERVER_NAME: orbi
       LARGE_FONTS: 1
@@ -197,7 +215,7 @@ services:
       traefik.enable: true
       traefik.http.routers.vnstat-router.rule: Host(`vnstat.router.nt`)
 
-  web:
+  traefik:
     container_name: traefik
     image: traefik
     restart: unless-stopped
@@ -207,31 +225,32 @@ services:
       - --log.level=INFO
       - --global.checknewversion=false
       - --global.sendanonymoususage=false
-      # Entrypoints
-      - --entrypoints.http.address=:80
-      # Local plugins
       - --experimental.localplugins.rewritebody.modulename=github.com/packruler/rewrite-body
-      # File provider
-      - --providers.file.filename=/etc/traefik/file-provider.yml
-      - --providers.file.watch=true
-      # Docker provider
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
       - --providers.docker.defaultRule=Host(`{{ index .Labels "traefik.name" }}.nt`)
+      - --providers.file.filename=/etc/traefik/file-provider.yml
+      - --providers.file.watch=true
+    extra_hosts:
+      - "host.docker.internal:10.0.0.10"
     networks:
       - default
       - proxy
       - dns
     ports:
-      - 80:80
+      - 80:80/tcp
+      - 8090:8080/tcp
     volumes:
       - /opt/appdata/traefik/config:/etc/traefik
       - /opt/appdata/traefik/plugins:/plugins-local
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       traefik.enable: true
-      traefik.http.routers.web.rule: Host(`web.nt`) || Host(`10.0.0.10`)
+      traefik.http.routers.web.rule: Host(`web.nt`) || Host(`10.0.0.10`) || Host(`always-on`)
       traefik.http.routers.web.service: api@internal
+      traefik.http.middlewares.to-https.redirectscheme.scheme: https
+      traefik.http.middlewares.homer-cors.headers.accessControlAllowMethods: GET # PUT,OPTIONS
+      traefik.http.middlewares.homer-cors.headers.accessControlAllowOriginList: http://home.lab
 
   filebrowser:
     container_name: filebrowser
@@ -247,7 +266,6 @@ services:
       FB_DISABLE-PREVIEW-RESIZE: true
     volumes:
       - /opt/appdata/filebrowser:/config
-      #
       - /home/agneev:/srv/home
       - /opt/appdata:/srv/appdata
       - /mnt:/srv/mnt
@@ -259,7 +277,7 @@ services:
     container_name: homer
     image: b4bz/homer
     restart: unless-stopped
-    user: "1001:1001"
+    user: 1001:1001
     healthcheck:
       disable: true
     volumes:
@@ -286,6 +304,7 @@ services:
     labels:
       traefik.enable: true
       traefik.name: speedtest
+      traefik.http.routers.speedtesttracker.middlewares: homer-cors
 
   openspeedtest:
     container_name: openspeedtest
@@ -325,3 +344,8 @@ services:
       traefik.enable: true
       traefik.name: portainer
       traefik.http.services.portainer.loadbalancer.server.port: 9000
+      traefik.http.routers.portainer.middlewares: portainer-themecolor,portainer-cors,homer-cors
+      traefik.http.middlewares.portainer-themecolor.plugin.rewritebody.rewrites.regex: name="theme-color" content="#ffffff"/>
+      traefik.http.middlewares.portainer-themecolor.plugin.rewritebody.rewrites.replacement: <div></div>
+      traefik.http.middlewares.portainer-themecolor.plugin.rewritebody.rewrites.type: text/html
+      traefik.http.middlewares.portainer-cors.headers.accessControlAllowHeaders: X-Api-Key

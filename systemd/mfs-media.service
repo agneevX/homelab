@@ -5,11 +5,13 @@ Description = mergerFS media combined mount
 Type = forking
 
 ExecStart = mergerfs \
-	/home/agneev/drive-local:/mnt/rc-crypt:/mnt/vps/*:/mnt/media-drive/media /mnt/mfs-drive \
-	-o defaults,allow_other,dropcacheonclose=true,func.getattr=newest,category.action=all,category.create=ff,fsname=mfs-drive \
-	-o cache.files=auto-full,cache.readdir=true,cache.entry=120,cache.attr=120,cache.statfs=10
+	/opt/media-files=RW,6G:/mnt/D2/media:/mnt/HG500/media \
+	/mnt/mfs-media \
+	-o category.create=mfs,category.action=all \
+	-o func.getattr=newest,fsname=mfs-media \
+	-o dropcacheonclose=true,cache.files=partial
 
-ExecStop = fusermount -uz /mnt/mfs-drive
+ExecStop = umount -v /mnt/mfs-media
 
 [Install]
-WantedBy = multi-user.target
+WantedBy = default.target
